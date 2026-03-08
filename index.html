@@ -674,6 +674,177 @@
   .team-role.kurucu { background: rgba(255,51,51,0.15); color: var(--red); border: 1px solid rgba(255,51,51,0.3); }
   .team-role.unknown { background: rgba(136,136,136,0.15); color: var(--muted); border: 1px solid rgba(136,136,136,0.3); }
   .team-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+  /* SSS */
+  .faq-list { display: flex; flex-direction: column; gap: 0.75rem; }
+  .faq-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .faq-item.open { border-color: rgba(255,106,0,0.4); }
+  .faq-question {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.1rem 1.5rem;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.95rem;
+    gap: 1rem;
+    user-select: none;
+  }
+  .faq-question:hover { color: var(--orange); }
+  .faq-arrow {
+    color: var(--orange);
+    font-size: 1rem;
+    transition: transform 0.3s;
+    flex-shrink: 0;
+  }
+  .faq-item.open .faq-arrow { transform: rotate(180deg); }
+  .faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease, padding 0.2s;
+    padding: 0 1.5rem;
+    color: var(--muted);
+    font-size: 0.88rem;
+    line-height: 1.7;
+  }
+  .faq-item.open .faq-answer { max-height: 200px; padding: 0 1.5rem 1.1rem; }
+
+  /* DUYURULAR */
+  .announcement-list { display: flex; flex-direction: column; gap: 1.5rem; }
+  .announcement-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform 0.3s, box-shadow 0.3s;
+  }
+  .announcement-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(255,106,0,0.1);
+  }
+  .announcement-banner {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+    background: var(--surface2);
+  }
+  .announcement-pixel-art {
+    width: 100%;
+    height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    background: #0a1628;
+  }
+  .mc-scene {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    font-family: 'Press Start 2P', monospace;
+  }
+  .mc-sky {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, #1a3a6e 0%, #2d5a8e 60%, #4a7fa8 100%);
+  }
+  .mc-stars { position: absolute; inset: 0; }
+  .mc-star {
+    position: absolute;
+    width: 2px; height: 2px;
+    background: white;
+    border-radius: 50%;
+    opacity: 0.7;
+  }
+  .mc-ground {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 50px;
+    background: #3d6b2c;
+  }
+  .mc-ground::before {
+    content: '';
+    position: absolute;
+    top: -8px; left: 0; right: 0;
+    height: 8px;
+    background: #5a9e3d;
+  }
+  .mc-dirt {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 35px;
+    background: #7a4a2a;
+  }
+  .mc-block {
+    position: absolute;
+    width: 40px; height: 40px;
+    image-rendering: pixelated;
+  }
+  .mc-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -60%);
+    text-align: center;
+    z-index: 10;
+  }
+  .mc-title-text {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.7rem, 2.5vw, 1rem);
+    color: #fff;
+    text-shadow: 3px 3px 0 #000, -1px -1px 0 #000;
+    white-space: nowrap;
+  }
+  .mc-subtitle-text {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(0.4rem, 1.2vw, 0.55rem);
+    color: #ffdd57;
+    text-shadow: 2px 2px 0 #000;
+    margin-top: 0.5rem;
+  }
+  .mc-torch {
+    position: absolute;
+    bottom: 52px;
+    width: 6px; height: 20px;
+    background: #8b4513;
+  }
+  .mc-torch::before {
+    content: '';
+    position: absolute;
+    top: -6px; left: -3px;
+    width: 12px; height: 8px;
+    background: radial-gradient(circle, #ffdd57, #ff8c00);
+    border-radius: 50%;
+    box-shadow: 0 0 15px 5px rgba(255,200,0,0.4);
+    animation: flicker 1.5s infinite alternate;
+  }
+  @keyframes flicker {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0.7; transform: scale(0.9); }
+  }
+  .announcement-body { padding: 1.5rem; }
+  .announcement-tag {
+    display: inline-block;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.45rem;
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    background: rgba(255,106,0,0.15);
+    color: var(--orange);
+    border: 1px solid rgba(255,106,0,0.3);
+    margin-bottom: 0.75rem;
+  }
+  .announcement-title { font-weight: 800; font-size: 1.1rem; margin-bottom: 0.4rem; }
+  .announcement-date { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.75rem; }
+  .announcement-desc { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
 </style>
 </head>
 <body>
@@ -920,6 +1091,112 @@
 
 <div class="divider"></div>
 
+<!-- DUYURULAR -->
+<section>
+  <div class="section-title"><span>Duyurular</span></div>
+  <div class="announcement-list">
+    <div class="announcement-card">
+      <div class="announcement-pixel-art">
+        <div class="mc-scene">
+          <div class="mc-sky"></div>
+          <div class="mc-stars" id="mc-stars"></div>
+          <!-- Meşaleler -->
+          <div class="mc-torch" style="left:15%"></div>
+          <div class="mc-torch" style="left:30%"></div>
+          <div class="mc-torch" style="right:30%"></div>
+          <div class="mc-torch" style="right:15%"></div>
+          <!-- Bloklar -->
+          <div style="position:absolute;bottom:50px;left:8%;width:40px;height:40px;background:#8B4513;border:2px solid #5C2D0A;image-rendering:pixelated;"></div>
+          <div style="position:absolute;bottom:90px;left:8%;width:40px;height:40px;background:#8B4513;border:2px solid #5C2D0A;"></div>
+          <div style="position:absolute;bottom:50px;right:8%;width:40px;height:40px;background:#8B4513;border:2px solid #5C2D0A;"></div>
+          <div style="position:absolute;bottom:90px;right:8%;width:40px;height:40px;background:#8B4513;border:2px solid #5C2D0A;"></div>
+          <!-- Zemin -->
+          <div class="mc-dirt"></div>
+          <div class="mc-ground"></div>
+          <!-- Yazı -->
+          <div class="mc-text">
+            <div class="mc-title-text">🎉 LahmacunSMP Açıldı!</div>
+            <div class="mc-subtitle-text">Sunucuya katılmaya hazır mısın?</div>
+          </div>
+        </div>
+      </div>
+      <div class="announcement-body">
+        <div class="announcement-tag">DUYURU</div>
+        <div class="announcement-title">Sunucu Açıldı!</div>
+        <div class="announcement-date">08.03.2026 — 15:55</div>
+        <div class="announcement-desc">8.03.2026 Tarihinde 15.55'de LahmacunSMP açıldı! Uzun süredir planlanan bu proje nihayet hayata geçti. Dört kurucu üye sunucuya bağlanarak ilk adımlarını attı. Rol sistemi, özel kurallar ve eğlenceli bir SMP deneyimi sizi bekliyor. Sunucuya katılmak için IP'yi kopyalayın ve maceraya başlayın!</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- SSS -->
+<section>
+  <div class="section-title"><span>Sık Sorulan Sorular</span></div>
+  <div class="faq-list">
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>Sunucuya nasıl katılırım?</span>
+        <span class="faq-arrow">▼</span>
+      </div>
+      <div class="faq-answer">Minecraft Java Edition'ı açın, Çok Oyunculu > Sunucu Ekle kısmına <strong>LahmacunSSMP.aternos.me:56605</strong> adresini girin ve bağlanın. Sunucunun açık olması gerektiğini unutmayın.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>Sunucu ne zaman açık?</span>
+        <span class="faq-arrow">▼</span>
+      </div>
+      <div class="faq-answer">Sunucu Aternos üzerinde çalıştığı için isteğe bağlı açılıyor. Sunucu durumu bölümünden anlık durumu kontrol edebilirsin. Discord sunucumuza katılarak açılış bildirimlerinden haberdar olabilirsin.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>Rol nasıl alırım?</span>
+        <span class="faq-arrow">▼</span>
+      </div>
+      <div class="faq-answer">Mağaza bölümüne giderek istediğin role tıkla ve başvuru formunu doldur. Kurucu başvurunu inceleyecek ve onay gelirse rolün verilecek.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>Sunucu korsan mı?</span>
+        <span class="faq-arrow">▼</span>
+      </div>
+      <div class="faq-answer">Hayır, LahmacunSMP yalnızca orijinal (lisanslı) Minecraft hesaplarını desteklemektedir. Korsan istemcilerle bağlantı sağlanamaz.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>TryHard yasağı ne demek?</span>
+        <span class="faq-arrow">▼</span>
+      </div>
+      <div class="faq-answer">Oyunu diğer oyuncuların eğlencesini bozacak şekilde aşırı optimize etmek yasaktır. Sınırsız otomatik farmlar, OP eşya üretim zincirleri buna örnek gösterilebilir. Amaç herkesin eğlenmesi!</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>Elytra nerede kullanılabilir?</span>
+        <span class="faq-arrow">▼</span>
+      </div>
+      <div class="faq-answer">Elytra yalnızca End boyutunda kullanılabilir. Overworld ve Nether'da kullanmak yasaktır. Tek istisna: Yeni End'den Elytra aldıysan ve yakınında portal varsa çıkışa kadar kullanabilirsin.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>Şikayet nasıl yaparım?</span>
+        <span class="faq-arrow">▼</span>
+      </div>
+      <div class="faq-answer">Kural ihlali veya dolandırıcılık durumunda kurucuya özelden ulaşın. Ekran görüntüsü veya video kanıtı ile bildirmeniz inceleme sürecini hızlandırır.</div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-question" onclick="toggleFaq(this)">
+        <span>Kaç kişi aynı anda oynanabilir?</span>
+        <span class="faq-arrow">▼</span>
+      </div>
+      <div class="faq-answer">Sunucu şu an Aternos üzerinde çalıştığından oyuncu kapasitesi sınırlıdır. Sunucu durumu bölümündeki maksimum oyuncu sayısını kontrol edebilirsin.</div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
 <footer>
   <span>LahmacunSMP</span><br><br>
   Tüm hakları saklıdır. İyi eğlenceler!
@@ -1110,6 +1387,27 @@
     document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
     document.getElementById('lb-' + tab).classList.add('active');
     event.target.classList.add('active');
+  }
+
+  // SSS
+  function toggleFaq(el) {
+    const item = el.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  }
+
+  // MC YILDIZLAR
+  const starsContainer = document.getElementById('mc-stars');
+  if (starsContainer) {
+    for (let i = 0; i < 30; i++) {
+      const star = document.createElement('div');
+      star.className = 'mc-star';
+      star.style.left = Math.random() * 100 + '%';
+      star.style.top = Math.random() * 60 + '%';
+      star.style.opacity = Math.random() * 0.8 + 0.2;
+      starsContainer.appendChild(star);
+    }
   }
 
   function copyIP() {
