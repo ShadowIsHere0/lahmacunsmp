@@ -777,6 +777,9 @@ async function loadAnnouncements() {
   } catch { document.getElementById('announcements-list').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);">Yüklenemedi.</div>'; }
 }
 loadAnnouncements();
+
+// STARS
+['ann-stars','gal-stars'].forEach(id => {
   const c = document.getElementById(id); if (!c) return;
   for (let i = 0; i < 28; i++) {
     const s = document.createElement('div');
