@@ -47,9 +47,50 @@ db.exec(`
   INSERT OR IGNORE INTO team (username, role, description, sort_order) VALUES ('Metanoid', 'REHBER', 'Her zaman ortalikta kosturan bir oyuncu.', 2);
   INSERT OR IGNORE INTO team (username, role, description, sort_order) VALUES ('Darkiyuuu', 'ROL BEKLENIYOOR', 'Gölgelerde dolasan gizemli bir oyuncu.', 3);
   INSERT OR IGNORE INTO team (username, role, description, sort_order) VALUES ('Booster', 'ROL BEKLENIYOOR', 'Enerjisiyle ortama renk katan bir oyuncu.', 4);
+  CREATE TABLE IF NOT EXISTS applications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    minecraft_username TEXT NOT NULL,
+    role TEXT NOT NULL,
+    answers TEXT NOT NULL,
+    status TEXT DEFAULT 'bekliyor',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
 `);
 
-// LİDERLİK
+// BAŞVURULAR
+app.post('/api/apply', (req, res) => {
+  const { minecraft_username, role, answers } = req.body;
+  if (!minecraft_username || !role || !answers) return res.status(400).json({ error: 'Eksik alan' });
+  db.prepare('INSERT INTO applications (minecraft_username, role, answers) VALUES (?, ?, ?)').run(minecraft_username, role, JSON.stringify(answers));
+  res.json({ success: true });
+});
+
+app.get('/api/applications', (req, res) => {
+  const { password } = req.query;
+  if (password !== ADMIN_PASS) return res.status(401).json({ error: 'Yetkisiz' });
+  res.json(db.prepare('SELECT * FROM applications ORDER BY created_at DESC').all());
+});
+
+app.post('/api/applications/approve', (req, res) => {
+  const { password, id } = req.body;
+  if (password !== ADMIN_PASS) return res.status(401).json({ error: 'Yetkisiz' });
+  const app_data = db.prepare('SELECT * FROM applications WHERE id = ?').get(id);
+  if (!app_data) return res.status(404).json({ error: 'Başvuru bulunamadı' });
+  db.prepare('UPDATE applications SET status = ? WHERE id = ?').run('onaylandi', id);
+  try {
+    db.prepare('INSERT INTO team (username, role, description) VALUES (?, ?, ?)').run(app_data.minecraft_username, app_data.role, `${app_data.role} rolüyle katıldı.`);
+  } catch {
+    db.prepare('UPDATE team SET role=? WHERE username=?').run(app_data.role, app_data.minecraft_username);
+  }
+  res.json({ success: true });
+});
+
+app.post('/api/applications/reject', (req, res) => {
+  const { password, id } = req.body;
+  if (password !== ADMIN_PASS) return res.status(401).json({ error: 'Yetkisiz' });
+  db.prepare('UPDATE applications SET status = ? WHERE id = ?').run('reddedildi', id);
+  res.json({ success: true });
+});
 app.get('/api/leaderboard', (req, res) => {
   const kills  = db.prepare('SELECT username, kills  AS value FROM leaderboard ORDER BY kills  DESC').all();
   const deaths = db.prepare('SELECT username, deaths AS value FROM leaderboard ORDER BY deaths DESC').all();
