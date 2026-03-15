@@ -621,6 +621,10 @@ footer { text-align:center; padding:3rem 2rem; border-top:1px solid var(--border
 </div>
 
 <script>
+// API & ADMIN
+const API = 'https://lahmacunsmp.onrender.com';
+let adminPassword = '6313148su';
+
 // NAVBAR
 const navbar = document.getElementById('navbar');
 const navLinks = document.querySelectorAll('.nav-link');
@@ -678,10 +682,6 @@ async function checkStatus() {
   }
 }
 checkStatus(); setInterval(checkStatus, 60000);
-
-// API
-const API = 'https://lahmacunsmp.onrender.com';
-let adminPassword = '6313148su';
 
 // LİDERLİK TABLOSU
 const medals = ['🥇','🥈','🥉'];
@@ -779,14 +779,17 @@ async function loadAnnouncements() {
 loadAnnouncements();
 
 // STARS
-['ann-stars','gal-stars'].forEach(id => {
-  const c = document.getElementById(id); if (!c) return;
-  for (let i = 0; i < 28; i++) {
-    const s = document.createElement('div');
-    s.style.cssText = `position:absolute;width:${Math.random()>.7?3:2}px;height:${Math.random()>.7?3:2}px;background:white;border-radius:50%;left:${Math.random()*100}%;top:${Math.random()*65}%;opacity:${Math.random()*.7+.2}`;
-    c.appendChild(s);
-  }
-});
+try {
+  ['ann-stars','gal-stars'].forEach(id => {
+    const c = document.getElementById(id);
+    if (!c) return;
+    for (let i = 0; i < 28; i++) {
+      const s = document.createElement('div');
+      s.style.cssText = `position:absolute;width:${Math.random()>.7?3:2}px;height:${Math.random()>.7?3:2}px;background:white;border-radius:50%;left:${Math.random()*100}%;top:${Math.random()*65}%;opacity:${Math.random()*.7+.2}`;
+      c.appendChild(s);
+    }
+  });
+} catch(e) {}
 
 // ADMIN SEKME
 function adminTab(tab) {
@@ -899,6 +902,8 @@ async function deleteAnnouncement(id) {
   });
   loadAnnouncements(); loadAdminAnn();
 }
+
+function openAdminPanel() {
   document.getElementById('admin-overlay').style.display = 'flex';
   document.getElementById('admin-login').style.display = 'block';
   document.getElementById('admin-panel').style.display = 'none';
