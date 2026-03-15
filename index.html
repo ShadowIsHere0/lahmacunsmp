@@ -360,24 +360,17 @@ footer { text-align:center; padding:3rem 2rem; border-top:1px solid var(--border
   <div class="gc" style="overflow:hidden;">
     <div class="lb-panel active" id="lb-kills">
       <div class="lb-row lbh"><span style="font-family:'Press Start 2P',monospace;font-size:.45rem;color:var(--muted)">#</span><span style="font-family:'Press Start 2P',monospace;font-size:.45rem;color:var(--muted)">Oyuncu</span><span style="font-family:'Press Start 2P',monospace;font-size:.45rem;color:var(--muted);text-align:right">Kill</span></div>
-      <div class="lb-row"><span class="lb-rank r1">🥇</span><span class="lb-name">KuzeyHere</span><span class="lb-val">0</span></div>
-      <div class="lb-row"><span class="lb-rank r2">🥈</span><span class="lb-name">benseref729</span><span class="lb-val">0</span></div>
-      <div class="lb-row"><span class="lb-rank r3">🥉</span><span class="lb-name">Metanoid</span><span class="lb-val">0</span></div>
-      <div class="lb-row"><span class="lb-rank other">4</span><span class="lb-name">Darkiyuu</span><span class="lb-val">0</span></div>
+      <div id="lb-kills-body"><div style="text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;">Yükleniyor...</div></div>
     </div>
     <div class="lb-panel" id="lb-deaths">
       <div class="lb-row lbh"><span style="font-family:'Press Start 2P',monospace;font-size:.45rem;color:var(--muted)">#</span><span style="font-family:'Press Start 2P',monospace;font-size:.45rem;color:var(--muted)">Oyuncu</span><span style="font-family:'Press Start 2P',monospace;font-size:.45rem;color:var(--muted);text-align:right">Ölüm</span></div>
-      <div class="lb-row"><span class="lb-rank r1">🥇</span><span class="lb-name">KuzeyHere</span><span class="lb-val">0</span></div>
-      <div class="lb-row"><span class="lb-rank r2">🥈</span><span class="lb-name">benseref729</span><span class="lb-val">0</span></div>
-      <div class="lb-row"><span class="lb-rank r3">🥉</span><span class="lb-name">Metanoid</span><span class="lb-val">0</span></div>
-      <div class="lb-row"><span class="lb-rank other">4</span><span class="lb-name">Darkiyuu</span><span class="lb-val">0</span></div>
+      <div id="lb-deaths-body"><div style="text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;">Yükleniyor...</div></div>
     </div>
     <div class="lb-panel" id="lb-online">
       <div class="lb-row lbh"><span style="font-family:'Press Start 2P',monospace;font-size:.45rem;color:var(--muted)">#</span><span style="font-family:'Press Start 2P',monospace;font-size:.45rem;color:var(--muted)">Oyuncu</span><span style="font-family:'Press Start 2P',monospace;font-size:.45rem;color:var(--muted);text-align:right">Süre</span></div>
-      <div class="lb-row"><span class="lb-rank r1">🥇</span><span class="lb-name">KuzeyHere</span><span class="lb-val">0s</span></div>
-      <div class="lb-row"><span class="lb-rank r2">🥈</span><span class="lb-name">benseref729</span><span class="lb-val">0s</span></div>
-      <div class="lb-row"><span class="lb-rank r3">🥉</span><span class="lb-name">Metanoid</span><span class="lb-val">0s</span></div>
-      <div class="lb-row"><span class="lb-rank other">4</span><span class="lb-name">Darkiyuu</span><span class="lb-val">0s</span></div>
+      <div id="lb-online-body"><div style="text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;">Yükleniyor...</div></div>
+    </div>
+  </div>
     </div>
   </div>
   <p style="text-align:center;color:var(--muted);font-size:.78rem;margin-top:1rem;">Veriler manuel olarak güncellenir.</p>
@@ -595,12 +588,10 @@ footer { text-align:center; padding:3rem 2rem; border-top:1px solid var(--border
     </div>
     <div id="admin-panel" style="display:none;">
       <div style="font-size:.9rem;color:var(--neon);font-weight:700;margin-bottom:1.5rem;">✅ Hoş geldin Kurucu!</div>
-      <div style="display:flex;flex-direction:column;gap:.75rem;">
-        <button onclick="alert('Liderlik tablosu düzenleme yakında!')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:.8rem;font-family:'Outfit',sans-serif;font-weight:700;cursor:pointer;text-align:left;transition:all .2s;" onmouseover="this.style.borderColor='var(--orange)'" onmouseout="this.style.borderColor='var(--border)'">📊 Liderlik Tablosunu Düzenle</button>
-        <button onclick="alert('Duyuru ekleme yakında!')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:.8rem;font-family:'Outfit',sans-serif;font-weight:700;cursor:pointer;text-align:left;transition:all .2s;" onmouseover="this.style.borderColor='var(--orange)'" onmouseout="this.style.borderColor='var(--border)'">📢 Duyuru Ekle</button>
-        <button onclick="alert('Kadro düzenleme yakında!')" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:10px;padding:.8rem;font-family:'Outfit',sans-serif;font-weight:700;cursor:pointer;text-align:left;transition:all .2s;" onmouseover="this.style.borderColor='var(--orange)'" onmouseout="this.style.borderColor='var(--border)'">👥 Kadroyu Düzenle</button>
-      </div>
-      <button onclick="document.getElementById('admin-overlay').style.display='none';document.getElementById('admin-panel').style.display='none';document.getElementById('admin-login').style.display='block';document.getElementById('admin-pass').value='';" style="margin-top:1.5rem;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:.5rem 1rem;font-family:'Outfit',sans-serif;font-size:.8rem;cursor:pointer;">Çıkış Yap</button>
+      <div style="font-family:'Press Start 2P',monospace;font-size:.55rem;color:var(--orange);margin-bottom:1rem;">📊 Liderlik Tablosu</div>
+      <div id="admin-lb-form"><div style="text-align:center;color:var(--muted);font-size:.8rem;">Yükleniyor...</div></div>
+      <button id="save-lb-btn" onclick="saveAdminLb()" style="width:100%;background:linear-gradient(135deg,var(--orange),var(--red));border:none;border-radius:10px;color:white;font-family:'Press Start 2P',monospace;font-size:.6rem;padding:.9rem;cursor:pointer;margin-top:.5rem;transition:all .2s;">Kaydet</button>
+      <button onclick="document.getElementById('admin-overlay').style.display='none';document.getElementById('admin-panel').style.display='none';document.getElementById('admin-login').style.display='block';document.getElementById('admin-pass').value='';" style="margin-top:1rem;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:.5rem 1rem;font-family:'Outfit',sans-serif;font-size:.8rem;cursor:pointer;width:100%;">Çıkış Yap</button>
     </div>
     <button onclick="document.getElementById('admin-overlay').style.display='none'" style="position:absolute;top:1rem;right:1rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1rem;">✕</button>
   </div>
@@ -665,11 +656,42 @@ async function checkStatus() {
 }
 checkStatus(); setInterval(checkStatus, 60000);
 
-// LB
+// API
+const API = 'https://lahmacunsmp.onrender.com';
+
+// LİDERLİK TABLOSU
+const medals = ['🥇','🥈','🥉'];
+function renderLb(data) {
+  ['kills','deaths','online'].forEach(type => {
+    const body = document.getElementById('lb-'+type+'-body');
+    const arr = data[type];
+    body.innerHTML = arr.map((p,i) => `
+      <div class="lb-row">
+        <span class="lb-rank ${i<3?'r'+(i+1):'other'}">${i<3?medals[i]:i+1}</span>
+        <span class="lb-name">${p.username}</span>
+        <span class="lb-val">${type==='online'?p.value+'s':p.value}</span>
+      </div>
+    `).join('');
+  });
+}
+async function loadLeaderboard() {
+  try {
+    const r = await fetch(API+'/api/leaderboard');
+    const d = await r.json();
+    renderLb(d);
+  } catch {
+    ['kills','deaths','online'].forEach(t => {
+      document.getElementById('lb-'+t+'-body').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;">Veri yüklenemedi.</div>';
+    });
+  }
+}
+loadLeaderboard();
+
+// LB TAB
 function switchLb(tab, el) {
   document.querySelectorAll('.lb-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('lb-' + tab).classList.add('active');
+  document.getElementById('lb-'+tab).classList.add('active');
   el.classList.add('active');
 }
 
@@ -707,9 +729,57 @@ function checkAdminPass() {
     document.getElementById('admin-login').style.display = 'none';
     document.getElementById('admin-panel').style.display = 'block';
     document.getElementById('admin-err').style.display = 'none';
+    loadAdminLb();
   } else {
     document.getElementById('admin-err').style.display = 'block';
     document.getElementById('admin-pass').value = '';
+  }
+}
+
+async function loadAdminLb() {
+  try {
+    const r = await fetch(API+'/api/leaderboard');
+    const d = await r.json();
+    const players = ['KuzeyHere','benseref729','Metanoid','Darkiyuuu','Booster'];
+    const container = document.getElementById('admin-lb-form');
+    container.innerHTML = players.map(name => {
+      const k = d.kills.find(p=>p.username===name);
+      const de = d.deaths.find(p=>p.username===name);
+      const o = d.online.find(p=>p.username===name);
+      return `<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.75rem;">
+        <div style="font-weight:700;margin-bottom:.75rem;color:var(--orange);">${name}</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;">
+          <div><label style="font-size:.75rem;color:var(--muted2);display:block;margin-bottom:.3rem;">Kill</label><input type="number" id="k-${name}" value="${k?.value??0}" style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.4rem .6rem;font-size:.85rem;outline:none;"></div>
+          <div><label style="font-size:.75rem;color:var(--muted2);display:block;margin-bottom:.3rem;">Ölüm</label><input type="number" id="d-${name}" value="${de?.value??0}" style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.4rem .6rem;font-size:.85rem;outline:none;"></div>
+          <div><label style="font-size:.75rem;color:var(--muted2);display:block;margin-bottom:.3rem;">Süre (s)</label><input type="number" id="o-${name}" value="${o?.value??0}" style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.4rem .6rem;font-size:.85rem;outline:none;"></div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch { console.error('Admin lb yüklenemedi'); }
+}
+
+async function saveAdminLb() {
+  const players = ['KuzeyHere','benseref729','Metanoid','Darkiyuuu','Booster'];
+  const btn = document.getElementById('save-lb-btn');
+  btn.textContent = 'Kaydediliyor...';
+  try {
+    for (const name of players) {
+      await fetch(API+'/api/leaderboard/update', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({
+          password:'6313148su', username:name,
+          kills: parseInt(document.getElementById('k-'+name).value)||0,
+          deaths: parseInt(document.getElementById('d-'+name).value)||0,
+          online_hours: parseFloat(document.getElementById('o-'+name).value)||0
+        })
+      });
+    }
+    btn.textContent = '✅ Kaydedildi!';
+    loadLeaderboard();
+    setTimeout(()=>btn.textContent='Kaydet',2000);
+  } catch {
+    btn.textContent = '❌ Hata!';
+    setTimeout(()=>btn.textContent='Kaydet',2000);
   }
 }
 const Q = {
