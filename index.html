@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LahmacunSMP</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23ff6b35'/><text y='.9em' font-size='80' x='10'>🍕</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -578,13 +579,26 @@ footer { text-align:center; padding:3rem 2rem; border-top:1px solid var(--border
 
 <!-- ADMIN MODAL -->
 <div id="admin-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:2000;align-items:center;justify-content:center;padding:1rem;" onclick="closeAdmin(event)">
-  <div style="background:#0f1520;border:1px solid var(--border2);border-radius:24px;padding:2.5rem;max-width:400px;width:100%;position:relative;" onclick="event.stopPropagation()">
+  <div style="background:#0f1520;border:1px solid var(--border2);border-radius:24px;padding:2.5rem;max-width:500px;width:100%;position:relative;max-height:85vh;overflow-y:auto;" onclick="event.stopPropagation()">
     <div style="font-family:'Press Start 2P',monospace;font-size:.7rem;color:var(--orange);margin-bottom:.5rem;">KURUCU PANELİ</div>
     <div style="font-size:.85rem;color:var(--muted2);margin-bottom:1.5rem;">Erişim için şifre gereklidir.</div>
     <div id="admin-login">
       <input type="password" id="admin-pass" placeholder="Şifre..." style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;font-size:.9rem;padding:.75rem 1rem;outline:none;margin-bottom:1rem;" onkeydown="if(event.key==='Enter')checkAdminPass()">
       <div id="admin-err" style="color:var(--red);font-size:.8rem;margin-bottom:.75rem;display:none;">Yanlış şifre!</div>
-      <button onclick="checkAdminPass()" style="width:100%;background:linear-gradient(135deg,var(--orange),var(--red));border:none;border-radius:10px;color:white;font-family:'Press Start 2P',monospace;font-size:.6rem;padding:.9rem;cursor:pointer;">Giriş Yap</button>
+      <button onclick="checkAdminPass()" style="width:100%;background:linear-gradient(135deg,var(--orange),var(--red));border:none;border-radius:10px;color:white;font-family:'Press Start 2P',monospace;font-size:.6rem;padding:.9rem;cursor:pointer;margin-bottom:.75rem;">Giriş Yap</button>
+      <button onclick="showResetPass()" style="width:100%;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:10px;font-family:'Outfit',sans-serif;font-size:.82rem;font-weight:600;padding:.7rem;cursor:pointer;">Şifremi Unuttum</button>
+    </div>
+
+    <!-- ŞİFRE SIFIRLAMA -->
+    <div id="reset-panel" style="display:none;">
+      <div style="font-family:'Press Start 2P',monospace;font-size:.6rem;color:var(--orange);margin-bottom:1rem;">ŞİFRE SIFIRLAMA</div>
+      <input type="password" id="reset-old" placeholder="Eski şifre..." style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;font-size:.9rem;padding:.75rem 1rem;outline:none;margin-bottom:.75rem;">
+      <input type="password" id="reset-new" placeholder="Yeni şifre..." style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;font-size:.9rem;padding:.75rem 1rem;outline:none;margin-bottom:.75rem;">
+      <input type="password" id="reset-new2" placeholder="Yeni şifre tekrar..." style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;font-size:.9rem;padding:.75rem 1rem;outline:none;margin-bottom:.75rem;">
+      <div id="reset-err" style="color:var(--red);font-size:.8rem;margin-bottom:.75rem;display:none;"></div>
+      <div id="reset-ok" style="color:var(--neon);font-size:.8rem;margin-bottom:.75rem;display:none;">✅ Şifre değiştirildi!</div>
+      <button onclick="doResetPass()" style="width:100%;background:linear-gradient(135deg,var(--orange),var(--red));border:none;border-radius:10px;color:white;font-family:'Press Start 2P',monospace;font-size:.6rem;padding:.9rem;cursor:pointer;margin-bottom:.75rem;">Şifreyi Değiştir</button>
+      <button onclick="showLoginPanel()" style="width:100%;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:10px;font-family:'Outfit',sans-serif;font-size:.82rem;padding:.7rem;cursor:pointer;">← Geri</button>
     </div>
     <div id="admin-panel" style="display:none;">
       <div style="font-size:.9rem;color:var(--neon);font-weight:700;margin-bottom:1.5rem;">✅ Hoş geldin Kurucu!</div>
@@ -658,6 +672,7 @@ checkStatus(); setInterval(checkStatus, 60000);
 
 // API
 const API = 'https://lahmacunsmp.onrender.com';
+let adminPassword = '6313148su';
 
 // LİDERLİK TABLOSU
 const medals = ['🥇','🥈','🥉'];
@@ -725,7 +740,7 @@ function closeAdmin(e) {
 }
 function checkAdminPass() {
   const pass = document.getElementById('admin-pass').value;
-  if (pass === '6313148su') {
+  if (pass === adminPassword) {
     document.getElementById('admin-login').style.display = 'none';
     document.getElementById('admin-panel').style.display = 'block';
     document.getElementById('admin-err').style.display = 'none';
@@ -734,6 +749,37 @@ function checkAdminPass() {
     document.getElementById('admin-err').style.display = 'block';
     document.getElementById('admin-pass').value = '';
   }
+}
+
+function showResetPass() {
+  document.getElementById('admin-login').style.display = 'none';
+  document.getElementById('reset-panel').style.display = 'block';
+  document.getElementById('reset-err').style.display = 'none';
+  document.getElementById('reset-ok').style.display = 'none';
+}
+
+function showLoginPanel() {
+  document.getElementById('reset-panel').style.display = 'none';
+  document.getElementById('admin-login').style.display = 'block';
+}
+
+function doResetPass() {
+  const old = document.getElementById('reset-old').value;
+  const n1 = document.getElementById('reset-new').value;
+  const n2 = document.getElementById('reset-new2').value;
+  const err = document.getElementById('reset-err');
+  const ok = document.getElementById('reset-ok');
+  err.style.display = 'none';
+  ok.style.display = 'none';
+  if (old !== adminPassword) { err.textContent = 'Eski şifre yanlış!'; err.style.display = 'block'; return; }
+  if (n1.length < 6) { err.textContent = 'Yeni şifre en az 6 karakter olmalı!'; err.style.display = 'block'; return; }
+  if (n1 !== n2) { err.textContent = 'Yeni şifreler eşleşmiyor!'; err.style.display = 'block'; return; }
+  adminPassword = n1;
+  ok.style.display = 'block';
+  document.getElementById('reset-old').value = '';
+  document.getElementById('reset-new').value = '';
+  document.getElementById('reset-new2').value = '';
+  setTimeout(() => showLoginPanel(), 1500);
 }
 
 async function loadAdminLb() {
@@ -767,7 +813,7 @@ async function saveAdminLb() {
       await fetch(API+'/api/leaderboard/update', {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({
-          password:'6313148su', username:name,
+          password: adminPassword, username:name,
           kills: parseInt(document.getElementById('k-'+name).value)||0,
           deaths: parseInt(document.getElementById('d-'+name).value)||0,
           online_hours: parseFloat(document.getElementById('o-'+name).value)||0
