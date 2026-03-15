@@ -601,6 +601,7 @@ footer { text-align:center; padding:3rem 2rem; border-top:1px solid var(--border
         <button onclick="adminTab('lb')" id="tab-lb" style="font-family:'Press Start 2P',monospace;font-size:.45rem;padding:.5rem 1rem;border-radius:8px;border:1px solid var(--orange);background:rgba(255,107,53,.1);color:var(--orange);cursor:pointer;">📊 Liderlik</button>
         <button onclick="adminTab('team')" id="tab-team" style="font-family:'Press Start 2P',monospace;font-size:.45rem;padding:.5rem 1rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;">👥 Kadro</button>
         <button onclick="adminTab('ann')" id="tab-ann" style="font-family:'Press Start 2P',monospace;font-size:.45rem;padding:.5rem 1rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;">📢 Duyuru</button>
+        <button onclick="adminTab('apps')" id="tab-apps" style="font-family:'Press Start 2P',monospace;font-size:.45rem;padding:.5rem 1rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;">📋 Başvurular</button>
       </div>
 
       <!-- LİDERLİK PANELİ -->
@@ -633,6 +634,11 @@ footer { text-align:center; padding:3rem 2rem; border-top:1px solid var(--border
           <textarea id="ann-desc" placeholder="Açıklama..." rows="3" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.65rem .9rem;font-size:.85rem;outline:none;margin-bottom:.6rem;resize:vertical;font-family:'Outfit',sans-serif;"></textarea>
           <button onclick="addAnnouncement()" style="width:100%;background:linear-gradient(135deg,var(--orange),var(--red));color:white;border:none;border-radius:10px;font-family:'Press Start 2P',monospace;font-size:.55rem;padding:.8rem;cursor:pointer;">Duyuru Ekle</button>
         </div>
+      </div>
+
+      <!-- BAŞVURULAR PANELİ -->
+      <div id="admin-tab-apps" style="display:none;">
+        <div id="admin-apps-list"><div style="text-align:center;color:var(--muted);font-size:.8rem;">Yükleniyor...</div></div>
       </div>
 
       <button onclick="document.getElementById('admin-overlay').style.display='none';document.getElementById('admin-panel').style.display='none';document.getElementById('admin-login').style.display='block';document.getElementById('admin-pass').value='';" style="margin-top:1.5rem;background:transparent;border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:.5rem 1rem;font-family:'Outfit',sans-serif;font-size:.8rem;cursor:pointer;width:100%;">Çıkış Yap</button>
@@ -818,7 +824,7 @@ try {
 
 // ADMIN SEKME
 function adminTab(tab) {
-  ['lb','team','ann'].forEach(t => {
+  ['lb','team','ann','apps'].forEach(t => {
     document.getElementById('admin-tab-'+t).style.display = t===tab ? 'block' : 'none';
     const btn = document.getElementById('tab-'+t);
     if (t===tab) { btn.style.borderColor='var(--orange)'; btn.style.background='rgba(255,107,53,.1)'; btn.style.color='var(--orange)'; }
@@ -826,6 +832,60 @@ function adminTab(tab) {
   });
   if (tab==='team') loadAdminTeam();
   if (tab==='ann') loadAdminAnn();
+  if (tab==='apps') loadAdminApps();
+}
+
+async function loadAdminApps() {
+  try {
+    const r = await fetch(API+'/api/applications?password='+adminPassword);
+    const d = await r.json();
+    const list = document.getElementById('admin-apps-list');
+    if (!d.length) { list.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.8rem;padding:1rem;">Henüz başvuru yok.</div>'; return; }
+    list.innerHTML = d.map(a => {
+      const answers = JSON.parse(a.answers);
+      const statusColor = a.status==='onaylandi' ? '#00e676' : a.status==='reddedildi' ? '#ff2d55' : '#ffb627';
+      return `<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.75rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
+          <div>
+            <div style="font-weight:700;font-size:.95rem;">${a.minecraft_username}</div>
+            <div style="font-family:'Press Start 2P',monospace;font-size:.45rem;color:var(--orange);margin-top:.3rem;">${a.role}</div>
+          </div>
+          <div style="font-family:'Press Start 2P',monospace;font-size:.42rem;color:${statusColor};">${a.status.toUpperCase()}</div>
+        </div>
+        <details style="margin-bottom:.75rem;">
+          <summary style="cursor:pointer;font-size:.82rem;color:var(--muted2);">Cevapları Gör</summary>
+          <div style="margin-top:.5rem;">
+            ${Object.entries(answers).map(([q,v]) => `<div style="margin-bottom:.4rem;"><div style="font-size:.75rem;color:var(--muted);margin-bottom:.1rem;">${q}</div><div style="font-size:.82rem;">${v}</div></div>`).join('')}
+          </div>
+        </details>
+        ${a.status==='bekliyor' ? `
+          <div style="display:flex;gap:.5rem;">
+            <button onclick="approveApp(${a.id})" style="flex:1;background:linear-gradient(135deg,#00e676,#00c853);border:none;border-radius:8px;color:#000;font-family:'Press Start 2P',monospace;font-size:.45rem;padding:.65rem;cursor:pointer;">✅ Onayla</button>
+            <button onclick="rejectApp(${a.id})" style="flex:1;background:linear-gradient(135deg,#ff2d55,#ff6b35);border:none;border-radius:8px;color:white;font-family:'Press Start 2P',monospace;font-size:.45rem;padding:.65rem;cursor:pointer;">❌ Reddet</button>
+          </div>
+        ` : ''}
+      </div>`;
+    }).join('');
+  } catch { document.getElementById('admin-apps-list').innerHTML = '<div style="color:var(--muted);font-size:.8rem;">Yüklenemedi.</div>'; }
+}
+
+async function approveApp(id) {
+  const r = await fetch(API+'/api/applications/approve', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ password: adminPassword, id })
+  });
+  const d = await r.json();
+  if (d.success) { loadAdminApps(); loadTeam(); }
+  else alert(d.error);
+}
+
+async function rejectApp(id) {
+  const r = await fetch(API+'/api/applications/reject', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ password: adminPassword, id })
+  });
+  const d = await r.json();
+  if (d.success) loadAdminApps();
 }
 
 // ADMIN KADRO
@@ -1064,10 +1124,25 @@ function closeModalOutside(e) { if (e.target === document.getElementById('modal-
 
 document.getElementById('basvuru-form').addEventListener('submit', async function(e) {
   e.preventDefault();
+  const role = document.getElementById('hidden-rol').value.toLowerCase();
+  const d = Q[role];
+  const minecraft_username = document.querySelector(`textarea[name^="1."]`).value;
+  const answers = {};
+  d.q.forEach((q,i) => {
+    const ta = document.querySelector(`textarea[name="${i+1}. ${q}"]`);
+    if (ta) answers[q] = ta.value;
+  });
   try {
-    const r = await fetch(this.action, {method:'POST',body:new FormData(this),headers:{'Accept':'application/json'}});
-    if (r.ok) { document.getElementById('form-container').style.display='none'; document.getElementById('success-msg').style.display='block'; this.reset(); }
-    else alert('Bir hata oluştu, tekrar dene.');
+    const r = await fetch(API+'/api/apply', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ minecraft_username, role: document.getElementById('hidden-rol').value, answers })
+    });
+    const res = await r.json();
+    if (res.success) {
+      document.getElementById('form-container').style.display='none';
+      document.getElementById('success-msg').style.display='block';
+      this.reset();
+    } else alert('Bir hata oluştu: ' + res.error);
   } catch { alert('Bağlantı hatası, tekrar dene.'); }
 });
 </script>
