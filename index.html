@@ -810,15 +810,17 @@ async function loadAdminTeam() {
     const d = await r.json();
     const list = document.getElementById('admin-team-list');
     list.innerHTML = d.map(p => `
-      <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.6rem;display:flex;align-items:center;gap:.75rem;">
-        <img src="https://mc-heads.net/avatar/${p.username}/40" style="width:40px;height:40px;border-radius:8px;image-rendering:pixelated;" onerror="this.src='https://mc-heads.net/avatar/steve/40'">
-        <div style="flex:1;">
+      <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.6rem;">
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;">
+          <img src="https://mc-heads.net/avatar/${p.username}/40" style="width:40px;height:40px;border-radius:8px;image-rendering:pixelated;" onerror="this.src='https://mc-heads.net/avatar/steve/40'">
           <div style="font-weight:700;font-size:.9rem;">${p.username}</div>
-          <select onchange="updateTeamRole('${p.username}',this.value,'${p.description}')" style="background:#0f1520;border:1px solid var(--border);border-radius:6px;color:var(--text);padding:.3rem .5rem;font-size:.8rem;outline:none;margin-top:.3rem;">
-            ${['KURUCU','REHBER','VIP','MVIP','RVIP','MEDYA','ROL BEKLENİYOR'].map(r => `<option ${r===p.role?'selected':''}>${r}</option>`).join('')}
-          </select>
+          <button onclick="deleteTeamMember('${p.username}')" style="margin-left:auto;background:rgba(255,45,85,.15);border:1px solid rgba(255,45,85,.3);color:#ff2d55;border-radius:8px;padding:.4rem .7rem;cursor:pointer;font-size:.8rem;">Sil</button>
         </div>
-        <button onclick="deleteTeamMember('${p.username}')" style="background:rgba(255,45,85,.15);border:1px solid rgba(255,45,85,.3);color:#ff2d55;border-radius:8px;padding:.4rem .7rem;cursor:pointer;font-size:.8rem;">Sil</button>
+        <select id="role-${p.username}" style="width:100%;background:#0f1520;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.5rem .75rem;font-size:.85rem;outline:none;margin-bottom:.5rem;">
+          ${['KURUCU','REHBER','VIP','MVIP','RVIP','MEDYA','ROL BEKLENİYOR'].map(r => `<option ${r===p.role?'selected':''}>${r}</option>`).join('')}
+        </select>
+        <input id="desc-${p.username}" value="${p.description}" placeholder="Kısa tanıtım..." style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.5rem .75rem;font-size:.85rem;outline:none;margin-bottom:.5rem;">
+        <button onclick="updateTeamRole('${p.username}',document.getElementById('role-${p.username}').value,document.getElementById('desc-${p.username}').value)" style="width:100%;background:linear-gradient(135deg,var(--orange),var(--red));border:none;border-radius:8px;color:white;font-family:'Press Start 2P',monospace;font-size:.5rem;padding:.65rem;cursor:pointer;">Kaydet</button>
       </div>
     `).join('');
   } catch { document.getElementById('admin-team-list').innerHTML = '<div style="color:var(--muted);font-size:.8rem;">Yüklenemedi.</div>'; }
