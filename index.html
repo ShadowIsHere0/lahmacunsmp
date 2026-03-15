@@ -237,7 +237,28 @@ footer { text-align:center; padding:3rem 2rem; border-top:1px solid var(--border
 
 <!-- NAVBAR -->
 <nav class="navbar" id="navbar">
-  <div class="nav-logo">LahmacunSMP</div>
+  <div class="nav-logo">
+    <svg width="22" height="22" viewBox="0 0 16 16" style="vertical-align:middle;margin-right:8px;image-rendering:pixelated;" xmlns="http://www.w3.org/2000/svg">
+      <!-- Dirt -->
+      <rect width="16" height="16" fill="#8B5E3C"/>
+      <rect x="1" y="1" width="2" height="2" fill="#7a5230"/>
+      <rect x="5" y="3" width="2" height="2" fill="#9a6a40"/>
+      <rect x="10" y="2" width="2" height="2" fill="#7a5230"/>
+      <rect x="3" y="8" width="2" height="2" fill="#9a6a40"/>
+      <rect x="8" y="10" width="3" height="2" fill="#7a5230"/>
+      <rect x="12" y="7" width="2" height="3" fill="#9a6a40"/>
+      <!-- Grass top -->
+      <rect width="16" height="5" fill="#5D9E32"/>
+      <rect x="0" y="0" width="2" height="2" fill="#4e8c28"/>
+      <rect x="3" y="0" width="1" height="3" fill="#6ab838"/>
+      <rect x="6" y="0" width="2" height="2" fill="#4e8c28"/>
+      <rect x="10" y="0" width="1" height="3" fill="#6ab838"/>
+      <rect x="13" y="0" width="2" height="2" fill="#4e8c28"/>
+      <!-- Grass side strips -->
+      <rect x="0" y="4" width="16" height="2" fill="#5D9E32" opacity="0.6"/>
+    </svg>
+    LahmacunSMP
+  </div>
   <div class="nav-links">
     <a class="nav-link active" href="#anasayfa">Ana Sayfa</a>
     <a class="nav-link" href="#durum">Durum</a>
@@ -737,14 +758,18 @@ const roleStyles = {
 };
 
 async function loadTeam() {
+  const customSkins = {
+    'KuzeyHere': 'https://raw.githubusercontent.com/ShadowIsHere0/lahmacunsmp/main/KuzeyHere.png',
+  };
   try {
     const r = await fetch(API+'/api/team');
     const d = await r.json();
     const grid = document.getElementById('team-grid');
     grid.innerHTML = d.map(p => {
       const style = roleStyles[p.role] || 'background:rgba(107,122,153,.12);color:#8892a4;border:1px solid rgba(107,122,153,.25);';
+      const skinUrl = customSkins[p.username] || `https://mc-heads.net/avatar/${p.username}/80`;
       return `<div class="team-card">
-        <img class="team-av" src="https://mc-heads.net/avatar/${p.username}/80" alt="${p.username}" onerror="this.src='https://mc-heads.net/avatar/steve/80'">
+        <img class="team-av" src="${skinUrl}" alt="${p.username}" onerror="this.src='https://mc-heads.net/avatar/steve/80'">
         <div class="team-name">${p.username}</div>
         <div class="team-role" style="${style}">${p.role}</div>
         <div class="team-desc">${p.description}</div>
