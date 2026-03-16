@@ -1357,6 +1357,102 @@ document.getElementById('basvuru-form').addEventListener('submit', async functio
     else alert('Bir hata olustu: ' + res.error);
   } catch { alert('Baglanti hatasi, tekrar dene.'); }
 });
+
+// SOHBET
+let chatMyName = null;
+let chatWithUser = null;
+let chatPollInterval = null;
+let chatLastSent = 0;
+
+function openConvs() {
+  document.getElementById('chat-modal-overlay').classList.add('active');
+}
+function closeChatModal(e) {
+  if (e.target === document.getElementById('chat-modal-overlay')) document.getElementById('chat-modal-overlay').classList.remove('active');
+}
+async function loadConversations() {
+  const name = document.getElementById('chat-my-username').value.trim();
+  if (!name) return alert('Kullanici adini gir!');
+  chatMyName = name;
+  document.getElementById('conv-my-name').textContent = name;
+  document.getElementById('chat-username-section').style.display = 'none';
+  document.getElementById('chat-conv-list').style.display = 'block';
+  try {
+    const r = await fetch(API+'/api/messages/conversations?username='+encodeURIComponent(name));
+    const d = await r.json();
+    const list = document.getElementById('conversations-list');
+    if (!d.length) { list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:2rem;font-size:.85rem;">Henuz sohbet yok.</div>'; return; }
+    list.innerHTML = d.map(c => {
+      const other = c.sender === name ? c.receiver : c.sender;
+      return '<div onclick="startChatDirect(\''+other+'\')" style="display:flex;align-items:center;gap:.75rem;padding:.75rem;border-radius:12px;cursor:pointer;transition:background .2s;" onmouseover="this.style.background=\'rgba(255,255,255,.05)\'" onmouseout="this.style.background=\'transparent\'"><img src="'+getSkin(other)+'" style="width:40px;height:40px;border-radius:8px;image-rendering:pixelated;" onerror="this.src=\'https://mc-heads.net/avatar/steve/40\'"><div><div style="font-weight:700;">'+other+'</div><div style="font-size:.78rem;color:var(--muted);margin-top:.2rem;">'+c.content.substring(0,40)+(c.content.length>40?'...':'')+'</div></div>'+(c.unread>0?'<div style="margin-left:auto;background:var(--orange);color:white;border-radius:99px;padding:.2rem .6rem;font-size:.75rem;font-weight:700;">'+c.unread+'</div>':'')+'</div>';
+    }).join('');
+  } catch { document.getElementById('conversations-list').innerHTML = '<div style="text-align:center;color:var(--red);padding:2rem;">Yuklenemedi.</div>'; }
+}
+
+function startChat(username) {
+  if (!chatMyName) { openConvs(); return; }
+  startChatDirect(username);
+}
+
+function startChatDirect(username) {
+  if (username === chatMyName) return;
+  chatWithUser = username;
+  document.getElementById('chat-modal-overlay').classList.remove('active');
+  document.getElementById('chat-header-name').textContent = username;
+  document.getElementById('chat-av').src = getSkin(username);
+  document.getElementById('chat-window').classList.add('open');
+  loadMessages();
+  if (chatPollInterval) clearInterval(chatPollInterval);
+  chatPollInterval = setInterval(loadMessages, 3000);
+}
+
+async function loadMessages() {
+  if (!chatMyName || !chatWithUser) return;
+  try {
+    const r = await fetch(API+'/api/messages?sender='+encodeURIComponent(chatMyName)+'&receiver='+encodeURIComponent(chatWithUser));
+    const d = await r.json();
+    const box = document.getElementById('chat-messages');
+    const atBottom = box.scrollHeight - box.scrollTop <= box.clientHeight + 50;
+    box.innerHTML = d.map(m => '<div style="display:flex;justify-content:'+(m.sender===chatMyName?'flex-end':'flex-start')+';margin-bottom:.5rem;"><div style="max-width:75%;background:'+(m.sender===chatMyName?'linear-gradient(135deg,var(--orange),var(--red))':'var(--surface2)')+';color:white;border-radius:12px;padding:.5rem .85rem;font-size:.85rem;line-height:1.5;">'+m.content+'</div></div>').join('');
+    if (atBottom) box.scrollTop = box.scrollHeight;
+  } catch {}
+}
+
+async function sendMessage() {
+  const now = Date.now();
+  if (now - chatLastSent < 2000) return;
+  const input = document.getElementById('chat-input');
+  const content = input.value.trim();
+  if (!content || !chatMyName || !chatWithUser) return;
+  chatLastSent = now;
+  input.value = '';
+  try {
+    await fetch(API+'/api/messages/send', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ sender: chatMyName, receiver: chatWithUser, content }) });
+    loadMessages();
+  } catch {}
+}
+
+function closeChatWindow() {
+  document.getElementById('chat-window').classList.remove('open');
+  if (chatPollInterval) { clearInterval(chatPollInterval); chatPollInterval = null; }
+  chatWithUser = null;
+}
+
+// BİLDİRİM POLLING
+async function checkNotifs() {
+  if (!chatMyName) return;
+  try {
+    const r = await fetch(API+'/api/messages/unread?username='+encodeURIComponent(chatMyName));
+    const d = await r.json();
+    if (d.length > 0 && (!chatWithUser || d[0].sender !== chatWithUser)) {
+      const toast = document.getElementById('notif-toast');
+      document.getElementById('notif-text').textContent = d[0].sender+' sana mesaj atti!';
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 4000);
+    }
+  } catch {}
+}
+setInterval(checkNotifs, 5000);
 </script>
 
 </body>
