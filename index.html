@@ -1537,6 +1537,7 @@ if (chatMyName) startNotifPolling();
 
 // ADMIN SEKME
 function adminTab(tab) {
+  ['lb','team','ann','apps'].forEach(t => {
     document.getElementById('admin-tab-'+t).style.display = t===tab ? 'block' : 'none';
     const btn = document.getElementById('tab-'+t);
     if (t===tab) { btn.style.borderColor='var(--orange)'; btn.style.background='rgba(255,107,53,.1)'; btn.style.color='var(--orange)'; }
