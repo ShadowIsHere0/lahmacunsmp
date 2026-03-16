@@ -910,7 +910,7 @@ function copyIP() {
 // SERVER STATUS
 async function checkStatus() {
   try {
-    const r = await fetch('https://api.mcsrvstat.us/2/LahmacunSSMP.aternos.me:56605');
+    const r = await fetch('https://api.mcstatus.io/v2/status/java/LahmacunSSMP.aternos.me:56605');
     const d = await r.json();
     const dot = document.getElementById('status-dot');
     const st  = document.getElementById('status-text');
