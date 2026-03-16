@@ -874,7 +874,6 @@ const navLinks = document.querySelectorAll('.nav-link');
 window.addEventListener('scroll', () => {
   navbar.classList.toggle('scrolled', window.scrollY > 50);
   document.getElementById('btt').classList.toggle('show', window.scrollY > 400);
-  // scroll spy
   let cur = '';
   document.querySelectorAll('[id]').forEach(s => {
     if (window.scrollY >= s.offsetTop - 120) cur = s.id;
@@ -882,11 +881,26 @@ window.addEventListener('scroll', () => {
   navLinks.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + cur));
 });
 
+// LOADING
+const loadingMsgs = ['Sunucu kontrol ediliyor...','Kadro yukleniyor...','Duyurular aliniyor...','Neredeyse hazir...'];
+let loadPct = 0;
+const loadInterval = setInterval(() => {
+  loadPct += Math.random() * 15 + 5;
+  if (loadPct > 100) loadPct = 100;
+  document.getElementById('loading-bar').style.width = loadPct + '%';
+  const idx = Math.floor(loadPct/25);
+  document.getElementById('loading-txt').textContent = loadingMsgs[idx] || 'Hazirlaniyor...';
+  if (loadPct >= 100) {
+    clearInterval(loadInterval);
+    setTimeout(() => document.getElementById('loading-screen').classList.add('hide'), 300);
+  }
+}, 120);
+
 // COPY IP
 function copyIP() {
   navigator.clipboard.writeText(document.getElementById('ip-text').textContent).then(() => {
     const b = document.getElementById('copy-btn');
-    b.textContent = 'Kopyalandı!'; b.classList.add('copied');
+    b.textContent = 'Kopyalandi!'; b.classList.add('copied');
     setTimeout(() => { b.textContent = 'Kopyala'; b.classList.remove('copied'); }, 2000);
   });
 }
@@ -903,41 +917,141 @@ async function checkStatus() {
     const sv  = document.getElementById('server-version');
     if (d.online) {
       dot.className = 'pdot';
-      st.innerHTML = '<span class="pdot"></span>Çevrimiçi'; st.className = 'stat-val';
+      st.innerHTML = '<span class="pdot"></span>Cevrimici'; st.className = 'stat-val';
       pc.textContent = d.players?.online ?? '0'; pc.className = 'stat-val';
-      mp.textContent = d.players?.max ?? '—';
-      sv.textContent = d.version ?? '—';
+      mp.textContent = d.players?.max ?? '-';
+      sv.textContent = d.version ?? '-';
     } else {
       dot.className = 'pdot off';
-      st.innerHTML = '<span class="pdot off"></span>Çevrimdışı'; st.className = 'stat-val off';
-      pc.textContent = 'Sunucu kapalı!'; pc.className = 'stat-val off';
-      mp.textContent = '—'; sv.textContent = '—';
+      st.innerHTML = '<span class="pdot off"></span>Cevrimdisi'; st.className = 'stat-val off';
+      pc.textContent = 'Sunucu kapali!'; pc.className = 'stat-val off';
+      mp.textContent = '-'; sv.textContent = '-';
     }
   } catch {
     document.getElementById('status-dot').className = 'pdot off';
-    document.getElementById('status-text').innerHTML = '<span class="pdot off"></span>Çevrimdışı';
+    document.getElementById('status-text').innerHTML = '<span class="pdot off"></span>Cevrimdisi';
     document.getElementById('status-text').className = 'stat-val off';
-    document.getElementById('player-count').textContent = 'Sunucu kapalı!';
+    document.getElementById('player-count').textContent = 'Sunucu kapali!';
     document.getElementById('player-count').className = 'stat-val off';
-    document.getElementById('max-players').textContent = '—';
-    document.getElementById('server-version').textContent = '—';
+    document.getElementById('max-players').textContent = '-';
+    document.getElementById('server-version').textContent = '-';
   }
 }
 checkStatus(); setInterval(checkStatus, 60000);
 
-// LİDERLİK TABLOSU
+// ROLE STYLES
+const roleStyles = {
+  'KURUCU': 'background:rgba(255,45,85,.12);color:#ff2d55;border:1px solid rgba(255,45,85,.3);',
+  'REHBER': 'background:rgba(0,230,118,.12);color:#00e676;border:1px solid rgba(0,230,118,.3);',
+  'VIP':    'background:rgba(255,214,10,.12);color:#ffd60a;border:1px solid rgba(255,214,10,.3);',
+  'MVIP':   'background:rgba(0,217,245,.12);color:#00d9f5;border:1px solid rgba(0,217,245,.3);',
+  'RVIP':   'background:rgba(255,182,39,.12);color:#ffb627;border:1px solid rgba(255,182,39,.3);',
+  'MEDYA':  'background:rgba(191,90,242,.12);color:#bf5af2;border:1px solid rgba(191,90,242,.3);',
+};
+
+function getSkin(username) {
+  const customs = { 'KuzeyHere': 'https://raw.githubusercontent.com/ShadowIsHere0/lahmacunsmp/main/KuzeyHere.png' };
+  return customs[username] || 'https://mc-heads.net/avatar/' + username + '/80';
+}
+
+// OYUNCU ARAMA
+async function searchPlayer() {
+  const username = document.getElementById('search-input').value.trim();
+  const result = document.getElementById('search-result');
+  if (!username) return;
+  result.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.85rem;padding:2rem;">Aranıyor...</div>';
+  try {
+    const [teamRes, lbRes, voteRes] = await Promise.all([
+      fetch(API+'/api/team'), fetch(API+'/api/leaderboard'), fetch(API+'/api/vote/leaderboard')
+    ]);
+    const teamData = await teamRes.json();
+    const lbData = await lbRes.json();
+    const voteData = await voteRes.json();
+    const u = username.toLowerCase();
+    const player = teamData.find(p => p.username.toLowerCase() === u);
+    const kills = lbData.kills.find(p => p.username.toLowerCase() === u);
+    const deaths = lbData.deaths.find(p => p.username.toLowerCase() === u);
+    const online = lbData.online.find(p => p.username.toLowerCase() === u);
+    const votes = voteData.find(p => p.minecraft_username.toLowerCase() === u);
+    if (!player && !kills && !deaths && !online && !votes) {
+      result.innerHTML = '<div style="text-align:center;color:var(--red);font-size:.85rem;padding:2rem;">Oyuncu bulunamadı.</div>';
+      return;
+    }
+    const roleStyle = player ? (roleStyles[player.role] || 'background:rgba(107,122,153,.12);color:#8892a4;border:1px solid rgba(107,122,153,.25);') : 'background:rgba(107,122,153,.12);color:#8892a4;border:1px solid rgba(107,122,153,.25);';
+    const role = player ? player.role : 'Misafir';
+    const desc = player ? player.description : 'Kadro üyesi değil.';
+    const displayName = player ? player.username : username;
+    result.innerHTML = '<div class="gc" style="padding:2rem;text-align:center;cursor:pointer;" onclick="openProfile(\''+displayName+'\')"><img src="'+getSkin(displayName)+'" style="width:80px;height:80px;border-radius:14px;image-rendering:pixelated;border:2px solid var(--border2);margin:0 auto 1rem;display:block;object-fit:cover;object-position:top;" onerror="this.src=\'https://mc-heads.net/avatar/steve/80\'"><div style="font-family:\'Press Start 2P\',monospace;font-size:.65rem;margin-bottom:.6rem;">'+displayName+'</div><div style="font-size:.78rem;font-weight:700;padding:.3rem .9rem;border-radius:99px;display:inline-block;margin-bottom:1rem;'+roleStyle+'">'+role+'</div><div style="font-size:.85rem;color:var(--muted2);margin-bottom:1.5rem;">'+desc+'</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;"><div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.75rem;"><div style="font-family:\'Press Start 2P\',monospace;font-size:.65rem;color:var(--orange);">'+(kills?.value??0)+'</div><div style="font-size:.72rem;color:var(--muted2);margin-top:.3rem;">Kill</div></div><div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.75rem;"><div style="font-family:\'Press Start 2P\',monospace;font-size:.65rem;color:var(--red);">'+(deaths?.value??0)+'</div><div style="font-size:.72rem;color:var(--muted2);margin-top:.3rem;">Ölüm</div></div><div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.75rem;"><div style="font-family:\'Press Start 2P\',monospace;font-size:.65rem;color:var(--neon);">'+(online?.value??0)+'s</div><div style="font-size:.72rem;color:var(--muted2);margin-top:.3rem;">Süre</div></div><div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.75rem;"><div style="font-family:\'Press Start 2P\',monospace;font-size:.65rem;color:var(--yellow);">'+(votes?.total_votes??0)+'</div><div style="font-size:.72rem;color:var(--muted2);margin-top:.3rem;">Oy</div></div></div><div style="margin-top:1rem;font-size:.78rem;color:var(--muted);">Detaylı profil için tıkla →</div></div>';
+  } catch {
+    result.innerHTML = '<div style="text-align:center;color:var(--red);font-size:.85rem;padding:2rem;">Hata oluştu.</div>';
+  }
+}
+
+// PROFİL
+async function openProfile(username) {
+  document.getElementById('profile-overlay').classList.add('active');
+  const content = document.getElementById('profile-content');
+  content.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);">Yükleniyor...</div>';
+  try {
+    const [teamRes, lbRes, voteRes] = await Promise.all([
+      fetch(API+'/api/team'), fetch(API+'/api/leaderboard'), fetch(API+'/api/vote/leaderboard')
+    ]);
+    const teamData = await teamRes.json();
+    const lbData = await lbRes.json();
+    const voteData = await voteRes.json();
+    const u = username.toLowerCase();
+    const player = teamData.find(p => p.username.toLowerCase() === u);
+    const kills = lbData.kills.find(p => p.username.toLowerCase() === u);
+    const deaths = lbData.deaths.find(p => p.username.toLowerCase() === u);
+    const online = lbData.online.find(p => p.username.toLowerCase() === u);
+    const votes = voteData.find(p => p.minecraft_username.toLowerCase() === u);
+    const killRank = lbData.kills.findIndex(p => p.username.toLowerCase() === u) + 1;
+    const roleStyle = player ? (roleStyles[player.role] || 'background:rgba(107,122,153,.12);color:#8892a4;border:1px solid rgba(107,122,153,.25);') : 'background:rgba(107,122,153,.12);color:#8892a4;border:1px solid rgba(107,122,153,.25);';
+    const role = player ? player.role : 'Misafir';
+    const kd = (kills?.value > 0 && deaths?.value > 0) ? (kills.value/deaths.value).toFixed(2) : '—';
+    content.innerHTML = '<div style="text-align:center;"><img src="'+getSkin(username)+'" style="width:100px;height:100px;border-radius:16px;image-rendering:pixelated;border:3px solid var(--border2);margin:0 auto 1.5rem;display:block;object-fit:cover;object-position:top;" onerror="this.src=\'https://mc-heads.net/avatar/steve/80\'"><div style="font-family:\'Press Start 2P\',monospace;font-size:.8rem;margin-bottom:.6rem;">'+username+'</div><div style="font-size:.8rem;font-weight:700;padding:.3rem .9rem;border-radius:99px;display:inline-block;margin-bottom:.75rem;'+roleStyle+'">'+role+'</div>'+(player?'<div style="font-size:.85rem;color:var(--muted2);margin:0 0 1rem;">'+player.description+'</div>':'')+' </div><div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;margin:1.5rem 0;"><div class="profile-stat"><div class="profile-stat-val">'+(kills?.value??0)+'</div><div class="profile-stat-lbl">Kill</div></div><div class="profile-stat"><div class="profile-stat-val" style="color:var(--red);">'+(deaths?.value??0)+'</div><div class="profile-stat-lbl">Ölüm</div></div><div class="profile-stat"><div class="profile-stat-val" style="color:var(--neon);">'+(online?.value??0)+'s</div><div class="profile-stat-lbl">Online</div></div><div class="profile-stat"><div class="profile-stat-val" style="color:var(--yellow);">'+(votes?.total_votes??0)+'</div><div class="profile-stat-lbl">Oy</div></div><div class="profile-stat"><div class="profile-stat-val" style="color:var(--gold);">'+(killRank>0?'#'+killRank:'—')+'</div><div class="profile-stat-lbl">Sıralama</div></div><div class="profile-stat"><div class="profile-stat-val" style="color:var(--orange);">'+kd+'</div><div class="profile-stat-lbl">K/D</div></div></div>';
+  } catch {
+    content.innerHTML = '<div style="text-align:center;color:var(--red);padding:2rem;">Profil yüklenemedi.</div>';
+  }
+}
+
+function closeProfile(e) {
+  if (e.target === document.getElementById('profile-overlay')) document.getElementById('profile-overlay').classList.remove('active');
+}
+
+// KADRO
+async function loadTeam() {
+  try {
+    const r = await fetch(API+'/api/team');
+    const d = await r.json();
+    const grid = document.getElementById('team-grid');
+    grid.innerHTML = d.map(p => {
+      const style = roleStyles[p.role] || 'background:rgba(107,122,153,.12);color:#8892a4;border:1px solid rgba(107,122,153,.25);';
+      return '<div class="team-card" onclick="openProfile(\''+p.username+'\')" style="cursor:pointer;"><img class="team-av" src="'+getSkin(p.username)+'" alt="'+p.username+'" onerror="this.src=\'https://mc-heads.net/avatar/steve/80\'"><div class="team-name">'+p.username+'</div><div class="team-role" style="'+style+'">'+p.role+'</div><div class="team-desc">'+p.description+'</div></div>';
+    }).join('');
+  } catch { document.getElementById('team-grid').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;">Yuklenemedi.</div>'; }
+}
+loadTeam();
+
+// DUYURULAR
+async function loadAnnouncements() {
+  try {
+    const r = await fetch(API+'/api/announcements');
+    const d = await r.json();
+    const list = document.getElementById('announcements-list');
+    if (!d.length) { list.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--muted);font-size:.85rem;">Henüz duyuru yok.</div>'; return; }
+    list.innerHTML = d.map(a => '<div class="ann-card" style="margin-bottom:1.5rem;"><div class="ann-body"><div class="ann-tag">DUYURU</div><div class="ann-title">'+a.title+'</div><div class="ann-date">'+a.date+'</div><div class="ann-desc">'+a.description+'</div></div></div>').join('');
+  } catch { document.getElementById('announcements-list').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);">Yuklenemedi.</div>'; }
+}
+loadAnnouncements();
+
+// LİDERLİK
 const medals = ['🥇','🥈','🥉'];
 function renderLb(data) {
   ['kills','deaths','online'].forEach(type => {
     const body = document.getElementById('lb-'+type+'-body');
     const arr = data[type];
-    body.innerHTML = arr.map((p,i) => `
-      <div class="lb-row">
-        <span class="lb-rank ${i<3?'r'+(i+1):'other'}">${i<3?medals[i]:i+1}</span>
-        <span class="lb-name">${p.username}</span>
-        <span class="lb-val">${type==='online'?p.value+'s':p.value}</span>
-      </div>
-    `).join('');
+    body.innerHTML = arr.map((p,i) => '<div class="lb-row"><span class="lb-rank '+(i<3?'r'+(i+1):'other')+'">'+(i<3?medals[i]:i+1)+'</span><span class="lb-name">'+p.username+'</span><span class="lb-val">'+(type==='online'?p.value+'s':p.value)+'</span></div>').join('');
   });
 }
 async function loadLeaderboard() {
@@ -947,13 +1061,12 @@ async function loadLeaderboard() {
     renderLb(d);
   } catch {
     ['kills','deaths','online'].forEach(t => {
-      document.getElementById('lb-'+t+'-body').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;">Veri yüklenemedi.</div>';
+      document.getElementById('lb-'+t+'-body').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;">Veri yuklenemedi.</div>';
     });
   }
 }
 loadLeaderboard();
 
-// LB TAB
 function switchLb(tab, el) {
   document.querySelectorAll('.lb-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.lb-tab').forEach(t => t.classList.remove('active'));
@@ -968,351 +1081,13 @@ function toggleFaq(el) {
   if (!open) item.classList.add('open');
 }
 
-// LOADING EKRANI
-const loadingMsgs = ['Sunucu kontrol ediliyor...','Kadro yükleniyor...','Duyurular alınıyor...','Neredeyse hazır...'];
-let loadPct = 0;
-const loadInterval = setInterval(() => {
-  loadPct += Math.random() * 15 + 5;
-  if (loadPct > 100) loadPct = 100;
-  document.getElementById('loading-bar').style.width = loadPct + '%';
-  document.getElementById('loading-txt').textContent = loadingMsgs[Math.floor(loadPct/25)] || 'Hazırlanıyor...';
-  if (loadPct >= 100) {
-    clearInterval(loadInterval);
-    setTimeout(() => document.getElementById('loading-screen').classList.add('hide'), 300);
-  }
-}, 120);
-
-// OYUNCU ARAMA & PROFİL
-const roleStyles = {
-  'KURUCU': 'background:rgba(255,45,85,.12);color:#ff2d55;border:1px solid rgba(255,45,85,.3);',
-  'REHBER': 'background:rgba(0,230,118,.12);color:#00e676;border:1px solid rgba(0,230,118,.3);',
-  'VIP':    'background:rgba(255,214,10,.12);color:#ffd60a;border:1px solid rgba(255,214,10,.3);',
-  'MVIP':   'background:rgba(0,217,245,.12);color:#00d9f5;border:1px solid rgba(0,217,245,.3);',
-  'RVIP':   'background:rgba(255,182,39,.12);color:#ffb627;border:1px solid rgba(255,182,39,.3);',
-  'MEDYA':  'background:rgba(191,90,242,.12);color:#bf5af2;border:1px solid rgba(191,90,242,.3);',
-};
-
-// KADRO
-async function searchPlayer() {
-  const username = document.getElementById('search-input').value.trim();
-  const result = document.getElementById('search-result');
-  if (!username) return;
-  result.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.85rem;">Aranıyor...</div>';
-
-  try {
-    const [teamRes, lbRes, voteRes] = await Promise.all([
-      fetch(API+'/api/team'),
-      fetch(API+'/api/leaderboard'),
-      fetch(API+'/api/vote/leaderboard')
-    ]);
-    const teamData = await teamRes.json();
-    const lbData = await lbRes.json();
-    const voteData = await voteRes.json();
-
-    const player = teamData.find(p => p.username.toLowerCase() === username.toLowerCase());
-    const kills = lbData.kills.find(p => p.username.toLowerCase() === username.toLowerCase());
-    const deaths = lbData.deaths.find(p => p.username.toLowerCase() === username.toLowerCase());
-    const online = lbData.online.find(p => p.username.toLowerCase() === username.toLowerCase());
-    const votes = voteData.find(p => p.minecraft_username.toLowerCase() === username.toLowerCase());
-
-    const roleStyle = player ? (roleStyles[player.role] || 'background:rgba(107,122,153,.12);color:#8892a4;border:1px solid rgba(107,122,153,.25);') : 'background:rgba(107,122,153,.12);color:#8892a4;border:1px solid rgba(107,122,153,.25);';
-    const role = player ? player.role : 'Misafir';
-    const desc = player ? player.description : 'Kadro üyesi değil.';
-    const skinUrl = username.toLowerCase() === 'kuzeyhere' 
-      ? 'https://raw.githubusercontent.com/ShadowIsHere0/lahmacunsmp/main/KuzeyHere.png'
-      : `https://mc-heads.net/avatar/${username}/80`;
-
-    result.innerHTML = `
-      <div class="gc" style="padding:2rem;text-align:center;" onclick="openProfile('${username}')">
-        <img src="${skinUrl}" style="width:80px;height:80px;border-radius:14px;image-rendering:pixelated;border:2px solid var(--border2);margin:0 auto 1rem;display:block;object-fit:cover;object-position:top;" onerror="this.src='https://mc-heads.net/avatar/steve/80'">
-        <div style="font-family:'Press Start 2P',monospace;font-size:.65rem;margin-bottom:.6rem;">${username}</div>
-        <div style="font-size:.78rem;font-weight:700;padding:.3rem .9rem;border-radius:99px;display:inline-block;margin-bottom:1rem;${roleStyle}">${role}</div>
-        <div style="font-size:.85rem;color:var(--muted2);margin-bottom:1.5rem;">${desc}</div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;">
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.75rem;"><div style="font-family:'Press Start 2P',monospace;font-size:.65rem;color:var(--orange);">${kills?.value??0}</div><div style="font-size:.72rem;color:var(--muted2);margin-top:.3rem;">Kill</div></div>
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.75rem;"><div style="font-family:'Press Start 2P',monospace;font-size:.65rem;color:var(--red);">${deaths?.value??0}</div><div style="font-size:.72rem;color:var(--muted2);margin-top:.3rem;">Ölüm</div></div>
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.75rem;"><div style="font-family:'Press Start 2P',monospace;font-size:.65rem;color:var(--neon);">${online?.value??0}s</div><div style="font-size:.72rem;color:var(--muted2);margin-top:.3rem;">Süre</div></div>
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.75rem;"><div style="font-family:'Press Start 2P',monospace;font-size:.65rem;color:var(--yellow);">${votes?.total_votes??0}</div><div style="font-size:.72rem;color:var(--muted2);margin-top:.3rem;">Oy</div></div>
-        </div>
-        <div style="margin-top:1rem;font-size:.78rem;color:var(--muted);">Detaylı profil için tıkla →</div>
-      </div>
-    `;
-  } catch {
-    result.innerHTML = '<div style="text-align:center;color:var(--red);font-size:.85rem;padding:2rem;">Oyuncu bulunamadı.</div>';
-  }
-}
-
-async function openProfile(username) {
-  document.getElementById('profile-overlay').classList.add('active');
-  const content = document.getElementById('profile-content');
-  content.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);">Yükleniyor...</div>';
-
-  try {
-    const [teamRes, lbRes, voteRes, appRes] = await Promise.all([
-      fetch(API+'/api/team'),
-      fetch(API+'/api/leaderboard'),
-      fetch(API+'/api/vote/leaderboard'),
-      fetch(API+'/api/applications?password='+adminPassword)
-    ]);
-    const teamData = await teamRes.json();
-    const lbData = await lbRes.json();
-    const voteData = await voteRes.json();
-    const appData = await appRes.json();
-
-    const player = teamData.find(p => p.username.toLowerCase() === username.toLowerCase());
-    const kills = lbData.kills.find(p => p.username.toLowerCase() === username.toLowerCase());
-    const deaths = lbData.deaths.find(p => p.username.toLowerCase() === username.toLowerCase());
-    const online = lbData.online.find(p => p.username.toLowerCase() === username.toLowerCase());
-    const votes = voteData.find(p => p.minecraft_username.toLowerCase() === username.toLowerCase());
-    const killRank = lbData.kills.findIndex(p => p.username.toLowerCase() === username.toLowerCase()) + 1;
-    const playerApps = appData.filter(a => a.minecraft_username.toLowerCase() === username.toLowerCase());
-
-    const roleStyle = player ? (roleStyles[player.role] || 'background:rgba(107,122,153,.12);color:#8892a4;border:1px solid rgba(107,122,153,.25);') : 'background:rgba(107,122,153,.12);color:#8892a4;border:1px solid rgba(107,122,153,.25);';
-    const role = player ? player.role : 'Misafir';
-    const skinUrl = username.toLowerCase() === 'kuzeyhere'
-      ? 'https://raw.githubusercontent.com/ShadowIsHere0/lahmacunsmp/main/KuzeyHere.png'
-      : `https://mc-heads.net/avatar/${username}/80`;
-
-    content.innerHTML = `
-      <div style="text-align:center;">
-        <img src="${skinUrl}" style="width:100px;height:100px;border-radius:16px;image-rendering:pixelated;border:3px solid var(--border2);margin:0 auto 1.5rem;display:block;object-fit:cover;object-position:top;" onerror="this.src='https://mc-heads.net/avatar/steve/80'">
-        <div style="font-family:'Press Start 2P',monospace;font-size:.8rem;margin-bottom:.6rem;">${username}</div>
-        <div style="font-size:.8rem;font-weight:700;padding:.3rem .9rem;border-radius:99px;display:inline-block;margin-bottom:.5rem;${roleStyle}">${role}</div>
-        ${player ? `<div style="font-size:.85rem;color:var(--muted2);margin:1rem 0;">${player.description}</div>` : ''}
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;margin:1.5rem 0;">
-        <div class="profile-stat"><div class="profile-stat-val">${kills?.value??0}</div><div class="profile-stat-lbl">⚔️ Kill</div></div>
-        <div class="profile-stat"><div class="profile-stat-val" style="color:var(--red);">${deaths?.value??0}</div><div class="profile-stat-lbl">💀 Ölüm</div></div>
-        <div class="profile-stat"><div class="profile-stat-val" style="color:var(--neon);">${online?.value??0}s</div><div class="profile-stat-lbl">⏱ Online</div></div>
-        <div class="profile-stat"><div class="profile-stat-val" style="color:var(--yellow);">${votes?.total_votes??0}</div><div class="profile-stat-lbl">🗳️ Oy</div></div>
-        <div class="profile-stat"><div class="profile-stat-val" style="color:var(--gold);">${killRank > 0 ? '#'+killRank : '—'}</div><div class="profile-stat-lbl">🏆 Sıralama</div></div>
-        <div class="profile-stat"><div class="profile-stat-val" style="color:var(--purple);">${playerApps.length}</div><div class="profile-stat-lbl">📋 Başvuru</div></div>
-      </div>
-      ${kills?.value > 0 && deaths?.value > 0 ? `
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;text-align:center;">
-          <div style="font-size:.8rem;color:var(--muted2);margin-bottom:.4rem;">K/D Oranı</div>
-          <div style="font-family:'Press Start 2P',monospace;font-size:.9rem;color:var(--orange);">${(kills.value/deaths.value).toFixed(2)}</div>
-        </div>
-      ` : ''}
-      <button onclick="startChat('${username}');document.getElementById('profile-overlay').classList.remove('active');" style="width:100%;margin-top:1.5rem;background:linear-gradient(135deg,var(--neon2),var(--neon));border:none;border-radius:12px;color:#000;font-family:'Press Start 2P',monospace;font-size:.6rem;padding:.9rem;cursor:pointer;">💬 Mesaj Gönder</button>
-    `;
-  } catch {
-    content.innerHTML = '<div style="text-align:center;color:var(--red);padding:2rem;">Profil yüklenemedi.</div>';
-  }
-}
-
-function closeProfile(e) {
-  if (e.target === document.getElementById('profile-overlay')) {
-    document.getElementById('profile-overlay').classList.remove('active');
-  }
-}
-
-// MESAJLAŞMA
-let chatCurrentUser = null;
-let chatMyUsername = null;
-let chatLastMsgId = 0;
-let chatPollInterval = null;
-let notifPollInterval = null;
-
-function startChat(targetUser) {
-  const myName = prompt('Minecraft kullanıcı adın nedir?');
-  if (!myName || myName.trim() === '') return;
-  chatMyUsername = myName.trim();
-  chatCurrentUser = targetUser;
-  
-  document.getElementById('chat-header-name').textContent = targetUser;
-  document.getElementById('chat-av').src = targetUser.toLowerCase() === 'kuzeyhere' 
-    ? 'https://raw.githubusercontent.com/ShadowIsHere0/lahmacunsmp/main/KuzeyHere.png'
-    : `https://mc-heads.net/avatar/${targetUser}/32`;
-  document.getElementById('chat-window').classList.add('open');
-  loadChatHistory();
-  
-  clearInterval(chatPollInterval);
-  chatPollInterval = setInterval(loadChatHistory, 1000);
-}
-
-function closeChatWindow() {
-  document.getElementById('chat-window').classList.remove('open');
-  clearInterval(chatPollInterval);
-  chatCurrentUser = null;
-}
-
-async function loadChatHistory() {
-  if (!chatMyUsername || !chatCurrentUser) return;
-  try {
-    const r = await fetch(`${API}/api/messages/conversation?user1=${chatMyUsername}&user2=${chatCurrentUser}`);
-    const msgs = await r.json();
-    const container = document.getElementById('chat-messages');
-    const wasAtBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 50;
-    container.innerHTML = msgs.length === 0 
-      ? '<div style="text-align:center;color:var(--muted);font-size:.8rem;padding:1rem;">Henüz mesaj yok. İlk mesajı sen at!</div>'
-      : msgs.map(m => {
-          const isSent = m.sender === chatMyUsername;
-          const time = new Date(m.sent_at).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
-          return `<div style="display:flex;flex-direction:column;align-items:${isSent?'flex-end':'flex-start'};">
-            <div class="chat-msg ${isSent?'sent':'recv'}">${m.content}</div>
-            <div class="chat-msg-time" style="text-align:${isSent?'right':'left'};color:var(--muted);padding:0 .5rem;">${m.sender} · ${time}</div>
-          </div>`;
-        }).join('');
-    if (wasAtBottom) container.scrollTop = container.scrollHeight;
-  } catch {}
-}
-
-let lastSendTime = 0;
-async function sendMessage() {
-  const now = Date.now();
-  if (now - lastSendTime < 2000) {
-    showNotif('⏳ 2 saniye bekle!', '#ff2d55');
-    return;
-  }
-  const input = document.getElementById('chat-input');
-  const content = input.value.trim();
-  if (!content || !chatMyUsername || !chatCurrentUser) return;
-  lastSendTime = now;
-  input.value = '';
-  try {
-    const r = await fetch(API+'/api/messages/send', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ sender: chatMyUsername, receiver: chatCurrentUser, content })
-    });
-    const d = await r.json();
-    if (!d.success) showNotif('❌ ' + d.error, '#ff2d55');
-    else loadChatHistory();
-  } catch { showNotif('❌ Bağlantı hatası', '#ff2d55'); }
-}
-
-function showNotif(text, color) {
-  const notif = document.getElementById('msg-notif');
-  notif.textContent = text;
-  notif.style.color = color || 'var(--neon)';
-  notif.classList.add('show');
-  setTimeout(() => notif.classList.remove('show'), 4000);
-}
-
-// BİLDİRİM POLLİNG
-let notifUsername = null;
-let notifLastId = 0;
-
-function startNotifPolling(username) {
-  notifUsername = username;
-  clearInterval(notifPollInterval);
-  notifPollInterval = setInterval(async () => {
-    if (!notifUsername) return;
-    try {
-      const r = await fetch(`${API}/api/messages/new?username=${notifUsername}&since=${new Date(Date.now()-2000).toISOString()}`);
-      const msgs = await r.json();
-      msgs.forEach(m => {
-        if (m.id > notifLastId) {
-          notifLastId = m.id;
-          if (m.sender !== chatCurrentUser) {
-            showNotif(`💬 ${m.sender} sana mesaj attı!`, 'var(--neon)');
-          }
-        }
-      });
-    } catch {}
-  }, 1000);
-}
-
-// SOHBET MODAL
-async function loadConversations() {
-  const username = document.getElementById('chat-my-username').value.trim();
-  if (!username) return;
-  chatMyUsername = username;
-  notifUsername = username;
-  startNotifPolling(username);
-  document.getElementById('conv-my-name').textContent = username + ' olarak giriş yapıldı';
-  document.getElementById('chat-username-section').style.display = 'none';
-  document.getElementById('chat-conv-list').style.display = 'block';
-
-  try {
-    const r = await fetch(`${API}/api/messages/conversations?username=${username}`);
-    const convs = await r.json();
-    const list = document.getElementById('conversations-list');
-    if (!convs.length) { list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:2rem;font-size:.85rem;">Henüz sohbet yok.</div>'; return; }
-    list.innerHTML = convs.map(c => `
-      <div class="conv-item" onclick="document.getElementById('chat-modal-overlay').classList.remove('active');startChatDirect('${c.other_user}')">
-        <img src="https://mc-heads.net/avatar/${c.other_user}/40" style="width:40px;height:40px;border-radius:8px;image-rendering:pixelated;" onerror="this.src='https://mc-heads.net/avatar/steve/40'">
-        <div style="flex:1;">
-          <div style="font-weight:700;font-size:.9rem;">${c.other_user}</div>
-          <div style="font-size:.78rem;color:var(--muted2);margin-top:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;">${c.last_message||''}</div>
-        </div>
-        ${c.unread > 0 ? `<span class="conv-unread">${c.unread}</span>` : ''}
-      </div>
-    `).join('');
-  } catch { document.getElementById('conversations-list').innerHTML = '<div style="color:var(--red);text-align:center;font-size:.85rem;">Yüklenemedi.</div>'; }
-}
-
-function startChatDirect(targetUser) {
-  if (!chatMyUsername) return;
-  chatCurrentUser = targetUser;
-  document.getElementById('chat-header-name').textContent = targetUser;
-  document.getElementById('chat-av').src = `https://mc-heads.net/avatar/${targetUser}/32`;
-  document.getElementById('chat-window').classList.add('open');
-  loadChatHistory();
-  clearInterval(chatPollInterval);
-  chatPollInterval = setInterval(loadChatHistory, 1000);
-}
-
-function closeChatModal(e) {
-  if (e.target === document.getElementById('chat-modal-overlay')) {
-    document.getElementById('chat-modal-overlay').classList.remove('active');
-  }
-}
-
-async function loadTeam() {
-  const customSkins = {
-    'KuzeyHere': 'https://raw.githubusercontent.com/ShadowIsHere0/lahmacunsmp/main/KuzeyHere.png',
-  };
-  try {
-    const r = await fetch(API+'/api/team');
-    const d = await r.json();
-    const grid = document.getElementById('team-grid');
-    grid.innerHTML = d.map(p => {
-      const style = roleStyles[p.role] || 'background:rgba(107,122,153,.12);color:#8892a4;border:1px solid rgba(107,122,153,.25);';
-      const skinUrl = customSkins[p.username] || `https://mc-heads.net/avatar/${p.username}/80`;
-      return `<div class="team-card">
-        <img class="team-av" src="${skinUrl}" alt="${p.username}" onerror="this.src='https://mc-heads.net/avatar/steve/80'">
-        <div class="team-name">${p.username}</div>
-        <div class="team-role" style="${style}">${p.role}</div>
-        <div class="team-desc">${p.description}</div>
-      </div>`;
-    }).join('');
-  } catch { document.getElementById('team-grid').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;">Yüklenemedi.</div>'; }
-}
-loadTeam();
-
-// DUYURULAR
-async function loadAnnouncements() {
-  try {
-    const r = await fetch(API+'/api/announcements');
-    const d = await r.json();
-    const list = document.getElementById('announcements-list');
-    if (d.length === 0) {
-      list.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--muted);font-size:.85rem;">Henüz duyuru yok.</div>';
-      return;
-    }
-    list.innerHTML = d.map(a => `
-      <div class="ann-card" style="margin-bottom:1.5rem;">
-        <div class="ann-body">
-          <div class="ann-tag">DUYURU</div>
-          <div class="ann-title">${a.title}</div>
-          <div class="ann-date">${a.date}</div>
-          <div class="ann-desc">${a.description}</div>
-        </div>
-      </div>
-    `).join('');
-  } catch { document.getElementById('announcements-list').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);">Yüklenemedi.</div>'; }
-}
-loadAnnouncements();
-
 // STARS
 try {
   ['ann-stars','gal-stars'].forEach(id => {
-    const c = document.getElementById(id);
-    if (!c) return;
+    const c = document.getElementById(id); if (!c) return;
     for (let i = 0; i < 28; i++) {
       const s = document.createElement('div');
-      s.style.cssText = `position:absolute;width:${Math.random()>.7?3:2}px;height:${Math.random()>.7?3:2}px;background:white;border-radius:50%;left:${Math.random()*100}%;top:${Math.random()*65}%;opacity:${Math.random()*.7+.2}`;
+      s.style.cssText = 'position:absolute;width:'+(Math.random()>.7?3:2)+'px;height:'+(Math.random()>.7?3:2)+'px;background:white;border-radius:50%;left:'+(Math.random()*100)+'%;top:'+(Math.random()*65)+'%;opacity:'+(Math.random()*.7+.2);
       c.appendChild(s);
     }
   });
@@ -1324,15 +1099,8 @@ async function loadVoteLb() {
     const r = await fetch(API+'/api/vote/leaderboard');
     const d = await r.json();
     const lb = document.getElementById('vote-lb');
-    if (!d.length) { lb.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;">Henüz oy yok.</div>'; return; }
-    const medals = ['🥇','🥈','🥉'];
-    lb.innerHTML = d.map((p,i) => `
-      <div class="lb-row" style="${i===0?'background:rgba(255,214,10,.05);':''}">
-        <span class="lb-rank ${i<3?'r'+(i+1):'other'}">${i<3?medals[i]:i+1}</span>
-        <span class="lb-name">${p.minecraft_username}</span>
-        <span class="lb-val">${p.total_votes} oy</span>
-      </div>
-    `).join('');
+    if (!d.length) { lb.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;">Henuz oy yok.</div>'; return; }
+    lb.innerHTML = d.map((p,i) => '<div class="lb-row"'+(i===0?' style="background:rgba(255,214,10,.05);"':''+'><span class="lb-rank '+(i<3?'r'+(i+1):'other')+'">'+(i<3?medals[i]:i+1)+'</span><span class="lb-name">'+p.minecraft_username+'</span><span class="lb-val">'+p.total_votes+' oy</span></div>')).join('');
   } catch {}
 }
 loadVoteLb();
@@ -1341,209 +1109,81 @@ async function submitVote() {
   const username = document.getElementById('vote-username').value.trim();
   const msg = document.getElementById('vote-msg');
   const btn = document.getElementById('vote-btn');
-  if (!username) { 
-    msg.style.display = 'block';
-    msg.style.color = 'var(--red)';
-    msg.textContent = 'Kullanıcı adını gir!';
-    return; 
+  if (!username) {
+    msg.style.display = 'block'; msg.style.color = 'var(--red)'; msg.textContent = 'Kullanici adini gir!'; return;
   }
-  btn.textContent = 'Gönderiliyor...';
-  btn.style.opacity = '.7';
+  btn.textContent = 'Gonderiliyor...'; btn.style.opacity = '.7';
   try {
-    const r = await fetch(API+'/api/vote', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ minecraft_username: username })
-    });
+    const r = await fetch(API+'/api/vote', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ minecraft_username: username }) });
     const d = await r.json();
     msg.style.display = 'block';
     if (d.success) {
-      msg.style.color = 'var(--neon)';
-      msg.textContent = '✅ Oy verildi! Sunucuya girince ödülünü alacaksın.';
-      btn.textContent = '✅ Oy Verildi!';
-      btn.style.background = 'linear-gradient(135deg,var(--neon),#00c853)';
-      btn.style.opacity = '1';
-      document.getElementById('vote-username').value = '';
-      loadVoteLb();
+      msg.style.color = 'var(--neon)'; msg.textContent = 'Oy verildi! Sunucuya girince odulunu alacaksin.';
+      btn.textContent = 'Oy Verildi!'; btn.style.background = 'linear-gradient(135deg,var(--neon),#00c853)'; btn.style.opacity = '1';
+      document.getElementById('vote-username').value = ''; loadVoteLb();
     } else {
       msg.style.color = 'var(--red)';
-      if (d.next_vote) {
-        const next = new Date(d.next_vote);
-        msg.textContent = `❌ Zaten oy verdin! Sonraki oy: ${next.toLocaleString('tr-TR')}`;
-      } else {
-        msg.textContent = '❌ ' + d.error;
-      }
-      btn.textContent = '🗳️ Oy Ver';
-      btn.style.opacity = '1';
+      if (d.next_vote) { const next = new Date(d.next_vote); msg.textContent = 'Zaten oy verdin! Sonraki oy: '+next.toLocaleString('tr-TR'); }
+      else msg.textContent = d.error;
+      btn.textContent = 'Oy Ver'; btn.style.opacity = '1';
     }
   } catch {
-    msg.style.display = 'block';
-    msg.style.color = 'var(--red)';
-    msg.textContent = '❌ Bağlantı hatası, tekrar dene.';
-    btn.textContent = '🗳️ Oy Ver';
-    btn.style.opacity = '1';
+    msg.style.display = 'block'; msg.style.color = 'var(--red)'; msg.textContent = 'Baglanti hatasi, tekrar dene.';
+    btn.textContent = 'Oy Ver'; btn.style.opacity = '1';
   }
 }
-function adminTab(tab) {
-  ['lb','team','ann','apps'].forEach(t => {
-    document.getElementById('admin-tab-'+t).style.display = t===tab ? 'block' : 'none';
-    const btn = document.getElementById('tab-'+t);
-    if (t===tab) { btn.style.borderColor='var(--orange)'; btn.style.background='rgba(255,107,53,.1)'; btn.style.color='var(--orange)'; }
-    else { btn.style.borderColor='var(--border)'; btn.style.background='transparent'; btn.style.color='var(--muted)'; }
-  });
-  if (tab==='team') loadAdminTeam();
-  if (tab==='ann') loadAdminAnn();
-  if (tab==='apps') loadAdminApps();
-}
-// MESAJLAŞMA
-let chatMyName = localStorage.getItem('chat_username') || null;
-let chatWithUser = null;
-let chatPollInterval = null;
-let notifPollInterval = null;
-let lastMsgTime = new Date().toISOString();
-let chatLastSent = 0;
 
-function setChatUser() {
-  const name = document.getElementById('chat-myname').value.trim();
-  if (!name) return;
-  chatMyName = name;
-  localStorage.setItem('chat_username', name);
-  document.getElementById('username-overlay').style.display = 'none';
-  startNotifPolling();
-  if (chatWithUser) openChatWindow(chatWithUser);
+// ADMIN PANEL
+function openAdminPanel() {
+  document.getElementById('admin-overlay').style.display = 'flex';
+  document.getElementById('admin-login').style.display = 'block';
+  document.getElementById('admin-panel').style.display = 'none';
+  document.getElementById('admin-err').style.display = 'none';
+  document.getElementById('reset-panel').style.display = 'none';
+  document.getElementById('admin-pass').value = '';
 }
-
-function startChat(username) {
-  if (username === chatMyName) return;
-  chatWithUser = username;
-  if (!chatMyName) {
-    document.getElementById('username-overlay').style.display = 'flex';
-    return;
+function closeAdmin(e) {
+  if (e.target === document.getElementById('admin-overlay')) document.getElementById('admin-overlay').style.display = 'none';
+}
+function checkAdminPass() {
+  const pass = document.getElementById('admin-pass').value;
+  if (pass === adminPassword) {
+    document.getElementById('admin-login').style.display = 'none';
+    document.getElementById('admin-panel').style.display = 'block';
+    document.getElementById('admin-err').style.display = 'none';
+    adminTab('lb'); loadAdminLb();
+  } else {
+    document.getElementById('admin-err').style.display = 'block';
+    document.getElementById('admin-pass').value = '';
   }
-  openChatWindow(username);
 }
-
-async function openChatWindow(username) {
-  const skinUrl = username.toLowerCase() === 'kuzeyhere'
-    ? 'https://raw.githubusercontent.com/ShadowIsHere0/lahmacunsmp/main/KuzeyHere.png'
-    : `https://mc-heads.net/avatar/${username}/40`;
-  document.getElementById('chat-av').src = skinUrl;
-  document.getElementById('chat-name').textContent = username;
-  document.getElementById('chat-window').classList.add('active');
-  await loadChatMsgs();
-  if (chatPollInterval) clearInterval(chatPollInterval);
-  chatPollInterval = setInterval(loadChatMsgs, 2000);
-  await fetch(API+'/api/messages/read', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ username: chatMyName, other_user: username })
-  });
+function showResetPass() {
+  document.getElementById('admin-login').style.display = 'none';
+  document.getElementById('reset-panel').style.display = 'block';
+  document.getElementById('reset-err').style.display = 'none';
+  document.getElementById('reset-ok').style.display = 'none';
 }
-
-async function loadChatMsgs() {
-  if (!chatMyName || !chatWithUser) return;
-  try {
-    const r = await fetch(`${API}/api/messages/conversation?user1=${chatMyName}&user2=${chatWithUser}`);
-    const msgs = await r.json();
-    const container = document.getElementById('chat-msgs');
-    const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
-    container.innerHTML = msgs.map(m => {
-      const isSent = m.sender === chatMyName;
-      const time = new Date(m.sent_at).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
-      return `<div style="display:flex;flex-direction:column;align-items:${isSent?'flex-end':'flex-start'};">
-        <div class="chat-msg ${isSent?'sent':'recv'}">${m.content}</div>
-        <div class="chat-msg-time" style="text-align:${isSent?'right':'left'}">${time}</div>
-      </div>`;
-    }).join('');
-    if (wasAtBottom) container.scrollTop = container.scrollHeight;
-  } catch {}
+function showLoginPanel() {
+  document.getElementById('reset-panel').style.display = 'none';
+  document.getElementById('admin-login').style.display = 'block';
 }
-
-async function sendChatMsg() {
-  const input = document.getElementById('chat-input');
-  const content = input.value.trim();
-  if (!content || !chatMyName || !chatWithUser) return;
-  const now = Date.now();
-  if (now - chatLastSent < 2000) {
-    input.placeholder = 'Yavaş yavaş! (2s bekleme)';
-    setTimeout(() => input.placeholder = 'Mesaj yaz...', 2000);
-    return;
-  }
-  chatLastSent = now;
-  input.value = '';
-  try {
-    await fetch(API+'/api/messages/send', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ sender: chatMyName, receiver: chatWithUser, content })
-    });
-    await loadChatMsgs();
-  } catch {}
+function doResetPass() {
+  const old = document.getElementById('reset-old').value;
+  const n1 = document.getElementById('reset-new').value;
+  const n2 = document.getElementById('reset-new2').value;
+  const err = document.getElementById('reset-err');
+  const ok = document.getElementById('reset-ok');
+  err.style.display = 'none'; ok.style.display = 'none';
+  if (old !== adminPassword) { err.textContent = 'Eski sifre yanlis!'; err.style.display = 'block'; return; }
+  if (n1.length < 6) { err.textContent = 'Yeni sifre en az 6 karakter olmali!'; err.style.display = 'block'; return; }
+  if (n1 !== n2) { err.textContent = 'Yeni sifreler eslesmiyor!'; err.style.display = 'block'; return; }
+  adminPassword = n1;
+  ok.style.display = 'block';
+  document.getElementById('reset-old').value = '';
+  document.getElementById('reset-new').value = '';
+  document.getElementById('reset-new2').value = '';
+  setTimeout(() => showLoginPanel(), 1500);
 }
-
-function closeChat() {
-  document.getElementById('chat-window').classList.remove('active');
-  if (chatPollInterval) clearInterval(chatPollInterval);
-}
-
-function startNotifPolling() {
-  if (!chatMyName) return;
-  if (notifPollInterval) clearInterval(notifPollInterval);
-  notifPollInterval = setInterval(async () => {
-    try {
-      const r = await fetch(`${API}/api/messages/new?username=${chatMyName}&since=${lastMsgTime}`);
-      const msgs = await r.json();
-      if (msgs.length > 0) {
-        lastMsgTime = msgs[msgs.length-1].sent_at;
-        msgs.forEach(m => {
-          if (m.sender !== chatWithUser) showNotif(`💬 ${m.sender} sana mesaj attı!`);
-        });
-        if (chatWithUser && msgs.some(m => m.sender === chatWithUser)) loadChatMsgs();
-      }
-    } catch {}
-  }, 2000);
-}
-
-function showNotif(text) {
-  const toast = document.getElementById('notif-toast');
-  document.getElementById('notif-text').textContent = text;
-  toast.style.display = 'flex';
-  setTimeout(() => toast.style.display = 'none', 4000);
-}
-
-async function openConvs() {
-  if (!chatMyName) {
-    document.getElementById('username-overlay').style.display = 'flex';
-    return;
-  }
-  document.getElementById('convs-overlay').style.display = 'flex';
-  await loadConvs();
-}
-
-async function loadConvs() {
-  try {
-    const r = await fetch(`${API}/api/messages/conversations?username=${chatMyName}`);
-    const convs = await r.json();
-    const list = document.getElementById('convs-list');
-    if (!convs.length) { list.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--muted);font-size:.85rem;">Henüz sohbet yok.</div>'; return; }
-    list.innerHTML = convs.map(c => {
-      const skinUrl = c.other_user.toLowerCase() === 'kuzeyhere'
-        ? 'https://raw.githubusercontent.com/ShadowIsHere0/lahmacunsmp/main/KuzeyHere.png'
-        : `https://mc-heads.net/avatar/${c.other_user}/44`;
-      return `<div class="conv-item" onclick="document.getElementById('convs-overlay').style.display='none';startChat('${c.other_user}');">
-        <img class="conv-av" src="${skinUrl}" onerror="this.src='https://mc-heads.net/avatar/steve/44'">
-        <div style="flex:1;min-width:0;">
-          <div class="conv-name">${c.other_user}</div>
-          <div class="conv-last">${c.last_message || ''}</div>
-        </div>
-        ${c.unread > 0 ? `<span class="conv-unread">${c.unread}</span>` : ''}
-      </div>`;
-    }).join('');
-  } catch {}
-}
-
-function closeConvs(e) {
-  if (e.target === document.getElementById('convs-overlay')) document.getElementById('convs-overlay').style.display = 'none';
-}
-
-if (chatMyName) startNotifPolling();
 
 // ADMIN SEKME
 function adminTab(tab) {
@@ -1558,216 +1198,6 @@ function adminTab(tab) {
   if (tab==='apps') loadAdminApps();
 }
 
-async function loadAdminApps() {
-  try {
-    const r = await fetch(API+'/api/applications?password='+adminPassword);
-    const d = await r.json();
-    const list = document.getElementById('admin-apps-list');
-    if (!d.length) { list.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.8rem;padding:1rem;">Henüz başvuru yok.</div>'; return; }
-    list.innerHTML = d.map(a => {
-      const answers = JSON.parse(a.answers);
-      const statusColor = a.status==='onaylandi' ? '#00e676' : a.status==='reddedildi' ? '#ff2d55' : '#ffb627';
-      return `<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.75rem;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;">
-          <div>
-            <div style="font-weight:700;font-size:.95rem;">${a.minecraft_username}</div>
-            <div style="font-family:'Press Start 2P',monospace;font-size:.45rem;color:var(--orange);margin-top:.3rem;">${a.role}</div>
-          </div>
-          <div style="font-family:'Press Start 2P',monospace;font-size:.42rem;color:${statusColor};">${a.status.toUpperCase()}</div>
-        </div>
-        <details style="margin-bottom:.75rem;">
-          <summary style="cursor:pointer;font-size:.82rem;color:var(--muted2);">Cevapları Gör</summary>
-          <div style="margin-top:.5rem;">
-            ${Object.entries(answers).map(([q,v]) => `<div style="margin-bottom:.4rem;"><div style="font-size:.75rem;color:var(--muted);margin-bottom:.1rem;">${q}</div><div style="font-size:.82rem;">${v}</div></div>`).join('')}
-          </div>
-        </details>
-        ${a.status==='bekliyor' ? `
-          <div style="display:flex;gap:.5rem;">
-            <button onclick="approveApp(${a.id})" style="flex:1;background:linear-gradient(135deg,#00e676,#00c853);border:none;border-radius:8px;color:#000;font-family:'Press Start 2P',monospace;font-size:.45rem;padding:.65rem;cursor:pointer;">✅ Onayla</button>
-            <button onclick="rejectApp(${a.id})" style="flex:1;background:linear-gradient(135deg,#ff2d55,#ff6b35);border:none;border-radius:8px;color:white;font-family:'Press Start 2P',monospace;font-size:.45rem;padding:.65rem;cursor:pointer;">❌ Reddet</button>
-          </div>
-        ` : ''}
-      </div>`;
-    }).join('');
-  } catch { document.getElementById('admin-apps-list').innerHTML = '<div style="color:var(--muted);font-size:.8rem;">Yüklenemedi.</div>'; }
-}
-
-async function approveApp(id) {
-  const r = await fetch(API+'/api/applications/approve', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ password: adminPassword, id })
-  });
-  const d = await r.json();
-  if (d.success) { loadAdminApps(); loadTeam(); }
-  else alert(d.error);
-}
-
-async function rejectApp(id) {
-  const r = await fetch(API+'/api/applications/reject', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ password: adminPassword, id })
-  });
-  const d = await r.json();
-  if (d.success) loadAdminApps();
-}
-
-// ADMIN KADRO
-async function loadAdminTeam() {
-  try {
-    const r = await fetch(API+'/api/team');
-    const d = await r.json();
-    const list = document.getElementById('admin-team-list');
-    list.innerHTML = d.map(p => `
-      <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.6rem;">
-        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;">
-          <img src="https://mc-heads.net/avatar/${p.username}/40" style="width:40px;height:40px;border-radius:8px;image-rendering:pixelated;" onerror="this.src='https://mc-heads.net/avatar/steve/40'">
-          <div style="font-weight:700;font-size:.9rem;">${p.username}</div>
-          <button onclick="deleteTeamMember('${p.username}')" style="margin-left:auto;background:rgba(255,45,85,.15);border:1px solid rgba(255,45,85,.3);color:#ff2d55;border-radius:8px;padding:.4rem .7rem;cursor:pointer;font-size:.8rem;">Sil</button>
-        </div>
-        <select id="role-${p.username}" style="width:100%;background:#0f1520;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.5rem .75rem;font-size:.85rem;outline:none;margin-bottom:.5rem;">
-          ${['KURUCU','REHBER','VIP','MVIP','RVIP','MEDYA','ROL BEKLENİYOR'].map(r => `<option ${r===p.role?'selected':''}>${r}</option>`).join('')}
-        </select>
-        <input id="desc-${p.username}" value="${p.description}" placeholder="Kısa tanıtım..." style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.5rem .75rem;font-size:.85rem;outline:none;margin-bottom:.5rem;">
-        <button onclick="updateTeamRole('${p.username}',document.getElementById('role-${p.username}').value,document.getElementById('desc-${p.username}').value)" style="width:100%;background:linear-gradient(135deg,var(--orange),var(--red));border:none;border-radius:8px;color:white;font-family:'Press Start 2P',monospace;font-size:.5rem;padding:.65rem;cursor:pointer;">Kaydet</button>
-      </div>
-    `).join('');
-  } catch { document.getElementById('admin-team-list').innerHTML = '<div style="color:var(--muted);font-size:.8rem;">Yüklenemedi.</div>'; }
-}
-
-async function updateTeamRole(username, role, description) {
-  await fetch(API+'/api/team/update', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ password: adminPassword, username, role, description })
-  });
-  loadTeam();
-}
-
-async function deleteTeamMember(username) {
-  if (!confirm(username+' kadrodan silinsin mi?')) return;
-  await fetch(API+'/api/team/delete', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ password: adminPassword, username })
-  });
-  loadTeam(); loadAdminTeam();
-}
-
-async function addTeamMember() {
-  const username = document.getElementById('new-member-name').value.trim();
-  const role = document.getElementById('new-member-role').value;
-  const description = document.getElementById('new-member-desc').value.trim();
-  if (!username) return alert('Kullanıcı adı gerekli!');
-  const r = await fetch(API+'/api/team/add', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ password: adminPassword, username, role, description })
-  });
-  const d = await r.json();
-  if (d.success) { document.getElementById('new-member-name').value=''; document.getElementById('new-member-desc').value=''; loadTeam(); loadAdminTeam(); }
-  else alert(d.error);
-}
-
-// ADMIN DUYURU
-async function loadAdminAnn() {
-  try {
-    const r = await fetch(API+'/api/announcements');
-    const d = await r.json();
-    const list = document.getElementById('admin-ann-list');
-    if (d.length === 0) { list.innerHTML = '<div style="color:var(--muted);font-size:.8rem;text-align:center;padding:1rem;">Henüz duyuru yok.</div>'; return; }
-    list.innerHTML = d.map(a => `
-      <div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.6rem;">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;">
-          <div>
-            <div style="font-weight:700;font-size:.9rem;margin-bottom:.25rem;">${a.title}</div>
-            <div style="font-size:.75rem;color:var(--muted);">${a.date}</div>
-          </div>
-          <button onclick="deleteAnnouncement(${a.id})" style="background:rgba(255,45,85,.15);border:1px solid rgba(255,45,85,.3);color:#ff2d55;border-radius:8px;padding:.4rem .7rem;cursor:pointer;font-size:.8rem;flex-shrink:0;">Sil</button>
-        </div>
-      </div>
-    `).join('');
-  } catch { document.getElementById('admin-ann-list').innerHTML = '<div style="color:var(--muted);font-size:.8rem;">Yüklenemedi.</div>'; }
-}
-
-async function addAnnouncement() {
-  const title = document.getElementById('ann-title').value.trim();
-  const date = document.getElementById('ann-date').value.trim();
-  const description = document.getElementById('ann-desc').value.trim();
-  if (!title || !date || !description) return alert('Tüm alanları doldur!');
-  const r = await fetch(API+'/api/announcements/add', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ password: adminPassword, title, date, description })
-  });
-  const d = await r.json();
-  if (d.success) {
-    document.getElementById('ann-title').value='';
-    document.getElementById('ann-date').value='';
-    document.getElementById('ann-desc').value='';
-    loadAnnouncements(); loadAdminAnn();
-  } else alert(d.error);
-}
-
-async function deleteAnnouncement(id) {
-  if (!confirm('Bu duyuru silinsin mi?')) return;
-  await fetch(API+'/api/announcements/delete', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ password: adminPassword, id })
-  });
-  loadAnnouncements(); loadAdminAnn();
-}
-
-function openAdminPanel() {
-  document.getElementById('admin-overlay').style.display = 'flex';
-  document.getElementById('admin-login').style.display = 'block';
-  document.getElementById('admin-panel').style.display = 'none';
-  document.getElementById('admin-err').style.display = 'none';
-  document.getElementById('admin-pass').value = '';
-}
-function closeAdmin(e) {
-  if (e.target === document.getElementById('admin-overlay')) document.getElementById('admin-overlay').style.display = 'none';
-}
-function checkAdminPass() {
-  const pass = document.getElementById('admin-pass').value;
-  if (pass === adminPassword) {
-    document.getElementById('admin-login').style.display = 'none';
-    document.getElementById('admin-panel').style.display = 'block';
-    document.getElementById('admin-err').style.display = 'none';
-    adminTab('lb');
-    loadAdminLb();
-  } else {
-    document.getElementById('admin-err').style.display = 'block';
-    document.getElementById('admin-pass').value = '';
-  }
-}
-
-function showResetPass() {
-  document.getElementById('admin-login').style.display = 'none';
-  document.getElementById('reset-panel').style.display = 'block';
-  document.getElementById('reset-err').style.display = 'none';
-  document.getElementById('reset-ok').style.display = 'none';
-}
-
-function showLoginPanel() {
-  document.getElementById('reset-panel').style.display = 'none';
-  document.getElementById('admin-login').style.display = 'block';
-}
-
-function doResetPass() {
-  const old = document.getElementById('reset-old').value;
-  const n1 = document.getElementById('reset-new').value;
-  const n2 = document.getElementById('reset-new2').value;
-  const err = document.getElementById('reset-err');
-  const ok = document.getElementById('reset-ok');
-  err.style.display = 'none';
-  ok.style.display = 'none';
-  if (old !== adminPassword) { err.textContent = 'Eski şifre yanlış!'; err.style.display = 'block'; return; }
-  if (n1.length < 6) { err.textContent = 'Yeni şifre en az 6 karakter olmalı!'; err.style.display = 'block'; return; }
-  if (n1 !== n2) { err.textContent = 'Yeni şifreler eşleşmiyor!'; err.style.display = 'block'; return; }
-  adminPassword = n1;
-  ok.style.display = 'block';
-  document.getElementById('reset-old').value = '';
-  document.getElementById('reset-new').value = '';
-  document.getElementById('reset-new2').value = '';
-  setTimeout(() => showLoginPanel(), 1500);
-}
-
 async function loadAdminLb() {
   try {
     const r = await fetch(API+'/api/leaderboard');
@@ -1778,16 +1208,9 @@ async function loadAdminLb() {
       const k = d.kills.find(p=>p.username===name);
       const de = d.deaths.find(p=>p.username===name);
       const o = d.online.find(p=>p.username===name);
-      return `<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.75rem;">
-        <div style="font-weight:700;margin-bottom:.75rem;color:var(--orange);">${name}</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;">
-          <div><label style="font-size:.75rem;color:var(--muted2);display:block;margin-bottom:.3rem;">Kill</label><input type="number" id="k-${name}" value="${k?.value??0}" style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.4rem .6rem;font-size:.85rem;outline:none;"></div>
-          <div><label style="font-size:.75rem;color:var(--muted2);display:block;margin-bottom:.3rem;">Ölüm</label><input type="number" id="d-${name}" value="${de?.value??0}" style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.4rem .6rem;font-size:.85rem;outline:none;"></div>
-          <div><label style="font-size:.75rem;color:var(--muted2);display:block;margin-bottom:.3rem;">Süre (s)</label><input type="number" id="o-${name}" value="${o?.value??0}" style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.4rem .6rem;font-size:.85rem;outline:none;"></div>
-        </div>
-      </div>`;
+      return '<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.75rem;"><div style="font-weight:700;margin-bottom:.75rem;color:var(--orange);">'+name+'</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;"><div><label style="font-size:.75rem;color:var(--muted2);display:block;margin-bottom:.3rem;">Kill</label><input type="number" id="k-'+name+'" value="'+(k?.value??0)+'" style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.4rem .6rem;font-size:.85rem;outline:none;"></div><div><label style="font-size:.75rem;color:var(--muted2);display:block;margin-bottom:.3rem;">Olum</label><input type="number" id="d-'+name+'" value="'+(de?.value??0)+'" style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.4rem .6rem;font-size:.85rem;outline:none;"></div><div><label style="font-size:.75rem;color:var(--muted2);display:block;margin-bottom:.3rem;">Sure (s)</label><input type="number" id="o-'+name+'" value="'+(o?.value??0)+'" style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.4rem .6rem;font-size:.85rem;outline:none;"></div></div></div>';
     }).join('');
-  } catch { console.error('Admin lb yüklenemedi'); }
+  } catch { console.error('Admin lb yuklenemedi'); }
 }
 
 async function saveAdminLb() {
@@ -1798,28 +1221,101 @@ async function saveAdminLb() {
     for (const name of players) {
       await fetch(API+'/api/leaderboard/update', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({
-          password: adminPassword, username:name,
-          kills: parseInt(document.getElementById('k-'+name).value)||0,
-          deaths: parseInt(document.getElementById('d-'+name).value)||0,
-          online_hours: parseFloat(document.getElementById('o-'+name).value)||0
-        })
+        body: JSON.stringify({ password: adminPassword, username: name, kills: parseInt(document.getElementById('k-'+name).value)||0, deaths: parseInt(document.getElementById('d-'+name).value)||0, online_hours: parseFloat(document.getElementById('o-'+name).value)||0 })
       });
     }
-    btn.textContent = '✅ Kaydedildi!';
+    btn.textContent = 'Kaydedildi!';
     loadLeaderboard();
     setTimeout(()=>btn.textContent='Kaydet',2000);
-  } catch {
-    btn.textContent = '❌ Hata!';
-    setTimeout(()=>btn.textContent='Kaydet',2000);
-  }
+  } catch { btn.textContent = 'Hata!'; setTimeout(()=>btn.textContent='Kaydet',2000); }
 }
+
+async function loadAdminTeam() {
+  try {
+    const r = await fetch(API+'/api/team');
+    const d = await r.json();
+    const list = document.getElementById('admin-team-list');
+    list.innerHTML = d.map(p => '<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.6rem;"><div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.75rem;"><img src="'+getSkin(p.username)+'" style="width:40px;height:40px;border-radius:8px;image-rendering:pixelated;object-fit:cover;object-position:top;" onerror="this.src=\'https://mc-heads.net/avatar/steve/40\'"><div style="font-weight:700;font-size:.9rem;">'+p.username+'</div><button onclick="deleteTeamMember(\''+p.username+'\')" style="margin-left:auto;background:rgba(255,45,85,.15);border:1px solid rgba(255,45,85,.3);color:#ff2d55;border-radius:8px;padding:.4rem .7rem;cursor:pointer;font-size:.8rem;">Sil</button></div><select id="role-'+p.username+'" style="width:100%;background:#0f1520;border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.5rem .75rem;font-size:.85rem;outline:none;margin-bottom:.5rem;">'+['KURUCU','REHBER','VIP','MVIP','RVIP','MEDYA','ROL BEKLENIYOOR'].map(r => '<option '+(r===p.role?'selected':'')+'>'+r+'</option>').join('')+'</select><input id="desc-'+p.username+'" value="'+p.description+'" placeholder="Kisa tanitim..." style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.5rem .75rem;font-size:.85rem;outline:none;margin-bottom:.5rem;"><button onclick="updateTeamRole(\''+p.username+'\',document.getElementById(\'role-'+p.username+'\').value,document.getElementById(\'desc-'+p.username+'\').value)" style="width:100%;background:linear-gradient(135deg,var(--orange),var(--red));border:none;border-radius:8px;color:white;font-family:\'Press Start 2P\',monospace;font-size:.5rem;padding:.65rem;cursor:pointer;">Kaydet</button></div>').join('');
+  } catch { document.getElementById('admin-team-list').innerHTML = '<div style="color:var(--muted);font-size:.8rem;">Yuklenemedi.</div>'; }
+}
+
+async function updateTeamRole(username, role, description) {
+  await fetch(API+'/api/team/update', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: adminPassword, username, role, description }) });
+  loadTeam();
+}
+async function deleteTeamMember(username) {
+  if (!confirm(username+' kadrodan silinsin mi?')) return;
+  await fetch(API+'/api/team/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: adminPassword, username }) });
+  loadTeam(); loadAdminTeam();
+}
+async function addTeamMember() {
+  const username = document.getElementById('new-member-name').value.trim();
+  const role = document.getElementById('new-member-role').value;
+  const description = document.getElementById('new-member-desc').value.trim();
+  if (!username) return alert('Kullanici adi gerekli!');
+  const r = await fetch(API+'/api/team/add', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: adminPassword, username, role, description }) });
+  const d = await r.json();
+  if (d.success) { document.getElementById('new-member-name').value=''; document.getElementById('new-member-desc').value=''; loadTeam(); loadAdminTeam(); }
+  else alert(d.error);
+}
+
+async function loadAdminAnn() {
+  try {
+    const r = await fetch(API+'/api/announcements');
+    const d = await r.json();
+    const list = document.getElementById('admin-ann-list');
+    if (!d.length) { list.innerHTML = '<div style="color:var(--muted);font-size:.8rem;text-align:center;padding:1rem;">Henuz duyuru yok.</div>'; return; }
+    list.innerHTML = d.map(a => '<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.6rem;"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;"><div><div style="font-weight:700;font-size:.9rem;margin-bottom:.25rem;">'+a.title+'</div><div style="font-size:.75rem;color:var(--muted);">'+a.date+'</div></div><button onclick="deleteAnnouncement('+a.id+')" style="background:rgba(255,45,85,.15);border:1px solid rgba(255,45,85,.3);color:#ff2d55;border-radius:8px;padding:.4rem .7rem;cursor:pointer;font-size:.8rem;flex-shrink:0;">Sil</button></div></div>').join('');
+  } catch { document.getElementById('admin-ann-list').innerHTML = '<div style="color:var(--muted);font-size:.8rem;">Yuklenemedi.</div>'; }
+}
+async function addAnnouncement() {
+  const title = document.getElementById('ann-title').value.trim();
+  const date = document.getElementById('ann-date').value.trim();
+  const description = document.getElementById('ann-desc').value.trim();
+  if (!title || !date || !description) return alert('Tum alanlari doldur!');
+  const r = await fetch(API+'/api/announcements/add', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: adminPassword, title, date, description }) });
+  const d = await r.json();
+  if (d.success) { document.getElementById('ann-title').value=''; document.getElementById('ann-date').value=''; document.getElementById('ann-desc').value=''; loadAnnouncements(); loadAdminAnn(); }
+  else alert(d.error);
+}
+async function deleteAnnouncement(id) {
+  if (!confirm('Bu duyuru silinsin mi?')) return;
+  await fetch(API+'/api/announcements/delete', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: adminPassword, id }) });
+  loadAnnouncements(); loadAdminAnn();
+}
+
+async function loadAdminApps() {
+  try {
+    const r = await fetch(API+'/api/applications?password='+adminPassword);
+    const d = await r.json();
+    const list = document.getElementById('admin-apps-list');
+    if (!d.length) { list.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.8rem;padding:1rem;">Henuz basvuru yok.</div>'; return; }
+    list.innerHTML = d.map(a => {
+      const answers = JSON.parse(a.answers);
+      const statusColor = a.status==='onaylandi' ? '#00e676' : a.status==='reddedildi' ? '#ff2d55' : '#ffb627';
+      return '<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.75rem;"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem;"><div><div style="font-weight:700;font-size:.95rem;">'+a.minecraft_username+'</div><div style="font-family:\'Press Start 2P\',monospace;font-size:.45rem;color:var(--orange);margin-top:.3rem;">'+a.role+'</div></div><div style="font-family:\'Press Start 2P\',monospace;font-size:.42rem;color:'+statusColor+';">'+a.status.toUpperCase()+'</div></div><details style="margin-bottom:.75rem;"><summary style="cursor:pointer;font-size:.82rem;color:var(--muted2);">Cevaplari Gor</summary><div style="margin-top:.5rem;">'+Object.entries(answers).map(([q,v]) => '<div style="margin-bottom:.4rem;"><div style="font-size:.75rem;color:var(--muted);margin-bottom:.1rem;">'+q+'</div><div style="font-size:.82rem;">'+v+'</div></div>').join('')+'</div></details>'+(a.status==='bekliyor'?'<div style="display:flex;gap:.5rem;"><button onclick="approveApp('+a.id+')" style="flex:1;background:linear-gradient(135deg,#00e676,#00c853);border:none;border-radius:8px;color:#000;font-family:\'Press Start 2P\',monospace;font-size:.45rem;padding:.65rem;cursor:pointer;">Onayla</button><button onclick="rejectApp('+a.id+')" style="flex:1;background:linear-gradient(135deg,#ff2d55,#ff6b35);border:none;border-radius:8px;color:white;font-family:\'Press Start 2P\',monospace;font-size:.45rem;padding:.65rem;cursor:pointer;">Reddet</button></div>':'')+'</div>';
+    }).join('');
+  } catch { document.getElementById('admin-apps-list').innerHTML = '<div style="color:var(--muted);font-size:.8rem;">Yuklenemedi.</div>'; }
+}
+async function approveApp(id) {
+  const r = await fetch(API+'/api/applications/approve', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: adminPassword, id }) });
+  const d = await r.json();
+  if (d.success) { loadAdminApps(); loadTeam(); }
+  else alert(d.error);
+}
+async function rejectApp(id) {
+  const r = await fetch(API+'/api/applications/reject', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ password: adminPassword, id }) });
+  const d = await r.json();
+  if (d.success) loadAdminApps();
+}
+
+// MODAL (BAŞVURU)
 const Q = {
-  rehber:{color:'#00e676',title:'REHBER Başvurusu',sub:'Aşağıdaki soruları dürüstçe yanıtla.',q:['Minecraft kullanıcı adın nedir?','Kaç yaşındasın?','Ne zamandır Minecraft oynuyorsun?','Sunucumuzu nasıl buldun?','Neden Rehber olmak istiyorsun?','Sunucu kurallarını okudum. Hangi kuralı en önemli buluyorsun?','Daha önce başka bir sunucuda yetkili oldun mu?','Günde ortalama kaç saat oynarsın?','Yeni bir oyuncuya nasıl yardımcı olursun?','Hakkında bir şey söyle (isteğe bağlı).']},
-  vip:   {color:'#ffd60a',title:'VIP Başvurusu',   sub:'Aşağıdaki soruları dürüstçe yanıtla.',q:['Minecraft kullanıcı adın nedir?','Kaç yaşındasın?','Ne zamandır Minecraft oynuyorsun?','Neden VIP olmak istiyorsun?','Sunucu kurallarını okudum. En çok hangi kurala dikkat edersin?','Daha önce bir SMP sunucusunda oynadın mı? Anlat.','Farmlar hakkında ne düşünüyorsun? Limit koyulmalı mı?','Sunucuya nasıl katkıda bulunabilirsin?','En çok hangi Minecraft aktivitesini seviyorsun?','Bize kendini tanıt.']},
-  mvip:  {color:'#00d9f5',title:'MVIP Başvurusu',  sub:'Bu rol için daha detaylı sorular var. Dikkatli yanıtla.',q:['Minecraft kullanıcı adın nedir?','Kaç yaşındasın?','Ne zamandır Minecraft oynuyorsun ve oyun geçmişin nedir?','MVIP neden hak ettiğini düşünüyorsun?','Sunucu kurallarını detaylıca açıkla.','TryHard oynamak neden yasak? Ne düşünüyorsun?','Bir oyuncu kurallara aykırı davranırsa ne yaparsın?','Ekonomi veya farm konusunda önerilerin var mı?','Sunucudaki PvP hakkında görüşün nedir?','Gelecekte sunucuya nasıl katkı sunmak istersin?']},
-  rvip:  {color:'#ffb627',title:'RVIP Başvurusu',  sub:'En üst rol. Sorular oldukça detaylıdır. Ciddiye al.',q:['Minecraft kullanıcı adın nedir?','Kaç yaşındasın ve ne kadar süredir aktif oynuyorsun?','RVIP olmayı neden hak ettiğini düşünüyorsun? Somut gerekçeler sun.','Sunucu kurallarını ezberden yaz ve her birini yorumla.','TryHard yasağını ihlal eden oyuncu görünce ne yaparsın?','Sunucunun büyümesi için somut 3 önerin nedir?','Ekonomi ve farm dengesi nasıl olmalı?','Başka sunucularda yönetici deneyimin var mı? Anlat.','Sunucuya ne kadar zaman ayırabilirsin?','Seni diğer başvuruculardan ayıran tek şey nedir?']},
-  medya: {color:'#bf5af2',title:'MEDYA Başvurusu', sub:'İçerik üreticileri için özel başvuru formu.',q:['Minecraft kullanıcı adın nedir?','Hangi platformlarda içerik üretiyorsun? (YouTube, Twitch vs.)','Kanal/hesap linklerini paylaş.','Kaç abonen/takipçin var?','Ne sıklıkla içerik yayınlıyorsun?','Daha önce bir sunucuyu tanıttın mı? Anlat.','LahmacunSMP hakkında ne tür içerikler üretmeyi düşünüyorsun?','Sunucumuzu kaç kişiye ulaştırabileceğini düşünüyorsun?','Bize kendini ve kanalını tanıt.','Neden LahmacunSMP ile çalışmak istiyorsun?']}
+  rehber:{color:'#00e676',title:'REHBER Basvurusu',sub:'Asagidaki sorulari durustce yanitla.',q:['Minecraft kullanici adin nedir?','Kac yasindasin?','Ne zamandir Minecraft oynuyorsun?','Sunucumuzu nasil buldun?','Neden Rehber olmak istiyorsun?','Sunucu kurallarini okudum. Hangi kurali en onemli buluyorsun?','Daha once baska bir sunucuda yetkili oldun mu?','Gunde ortalama kac saat oynarsun?','Yeni bir oyuncuya nasil yardimci olursun?','Hakkinda bir sey soyle (istege bagli).']},
+  vip:   {color:'#ffd60a',title:'VIP Basvurusu',   sub:'Asagidaki sorulari durustce yanitla.',q:['Minecraft kullanici adin nedir?','Kac yasindasin?','Ne zamandir Minecraft oynuyorsun?','Neden VIP olmak istiyorsun?','Sunucu kurallarini okudum. En cok hangi kurala dikkat edersin?','Daha once bir SMP sunucusunda oynadim mi? Anlat.','Farmlar hakkinda ne dusunuyorsun? Limit koyulmali mi?','Sunucuya nasil katkida bulunabilirsin?','En cok hangi Minecraft aktivitesini seviyorsun?','Bize kendini tarit.']},
+  mvip:  {color:'#00d9f5',title:'MVIP Basvurusu',  sub:'Bu rol icin daha detayli sorular var. Dikkatli yanitla.',q:['Minecraft kullanici adin nedir?','Kac yasindasin?','Ne zamandir Minecraft oynuyorsun ve oyun gecmisin nedir?','MVIP neden hak ettigini dusunuyorsun?','Sunucu kurallarini detayli acikla.','TryHard oynamak neden yasak? Ne dusunuyorsun?','Bir oyuncu kurallara aykiri davranirsa ne yaparsun?','Ekonomi veya farm konusunda onerilerin var mi?','Sunucudaki PvP hakkinda gorusun nedir?','Gelecekte sunucuya nasil katki sunmak istersin?']},
+  rvip:  {color:'#ffb627',title:'RVIP Basvurusu',  sub:'En ust rol. Sorular oldukca detaylidir. Ciddiye al.',q:['Minecraft kullanici adin nedir?','Kac yasindasin ve ne kadar suredir aktif oynuyorsun?','RVIP olmayi neden hak ettigini dusunuyorsun? Somut gerekceler sun.','Sunucu kurallarini ezberden yaz ve her birini yorumla.','TryHard yasagini ihlal eden oyuncu gorunde ne yaparsun?','Sunucunun buyumesi icin somut 3 onerin nedir?','Ekonomi ve farm dengesi nasil olmali?','Baska sunucularda yonetici deneyimin var mi? Anlat.','Sunucuya ne kadar zaman ayirabilirsin?','Seni diger basvuruculardan ayiran tek sey nedir?']},
+  medya: {color:'#bf5af2',title:'MEDYA Basvurusu', sub:'Icerik ureticileri icin ozel basvuru formu.',q:['Minecraft kullanici adin nedir?','Hangi platformlarda icerik uretiyorsun?','Kanal/hesap linklerini paylas.','Kac abonenin/takipcin var?','Ne siklikla icerik yayinliyorsun?','Daha once bir sunucuyu tanitti mi? Anlat.','LahmacunSMP hakkinda ne tur icerikler uretmeyi dusunuyorsun?','Sunucumuzu kac kisiye ulastirabileceginizi dusunuyorsun?','Bize kendini ve kanalini tarit.','Neden LahmacunSMP ile calismak istiyorsun?']}
 };
 
 function openModal(role) {
@@ -1831,11 +1327,11 @@ function openModal(role) {
   const c = document.getElementById('questions-container'); c.innerHTML = '';
   d.q.forEach((q,i) => {
     const g = document.createElement('div'); g.className = 'fg';
-    g.innerHTML = `<label>${i+1}. ${q}</label><textarea name="${i+1}. ${q}" rows="2" placeholder="Cevabın..." required></textarea>`;
+    g.innerHTML = '<label>'+(i+1)+'. '+q+'</label><textarea name="'+(i+1)+'. '+q+'" rows="2" placeholder="Cevabin..." required></textarea>';
     c.appendChild(g);
   });
   const btn = document.getElementById('submit-btn');
-  btn.style.background = `linear-gradient(135deg,${d.color},${d.color}bb)`;
+  btn.style.background = 'linear-gradient(135deg,'+d.color+','+d.color+'bb)';
   btn.style.color = '#000';
   document.getElementById('form-container').style.display = 'block';
   document.getElementById('success-msg').style.display = 'none';
@@ -1849,25 +1345,17 @@ document.getElementById('basvuru-form').addEventListener('submit', async functio
   e.preventDefault();
   const role = document.getElementById('hidden-rol').value.toLowerCase();
   const d = Q[role];
-  const minecraft_username = document.querySelector(`textarea[name^="1."]`).value;
+  const minecraft_username = document.querySelector('textarea[name^="1."]').value;
   const answers = {};
-  d.q.forEach((q,i) => {
-    const ta = document.querySelector(`textarea[name="${i+1}. ${q}"]`);
-    if (ta) answers[q] = ta.value;
-  });
+  d.q.forEach((q,i) => { const ta = document.querySelector('textarea[name="'+(i+1)+'. '+q+'"]'); if (ta) answers[q] = ta.value; });
   try {
-    const r = await fetch(API+'/api/apply', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ minecraft_username, role: document.getElementById('hidden-rol').value, answers })
-    });
+    const r = await fetch(API+'/api/apply', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ minecraft_username, role: document.getElementById('hidden-rol').value, answers }) });
     const res = await r.json();
-    if (res.success) {
-      document.getElementById('form-container').style.display='none';
-      document.getElementById('success-msg').style.display='block';
-      this.reset();
-    } else alert('Bir hata oluştu: ' + res.error);
-  } catch { alert('Bağlantı hatası, tekrar dene.'); }
+    if (res.success) { document.getElementById('form-container').style.display='none'; document.getElementById('success-msg').style.display='block'; this.reset(); }
+    else alert('Bir hata olustu: ' + res.error);
+  } catch { alert('Baglanti hatasi, tekrar dene.'); }
 });
 </script>
+
 </body>
 </html>
