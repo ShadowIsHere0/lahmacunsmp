@@ -545,14 +545,22 @@ footer { text-align:center; padding:3rem 2rem; border-top:1px solid var(--border
 <div class="sw" id="oy">
   <div class="sec-label">destek ol</div>
   <div class="sec-title"><span class="acc">Sunucuya</span> Oy Ver</div>
-  <div class="gc" style="padding:2.5rem;max-width:500px;margin:0 auto;">
-    <div style="text-align:center;margin-bottom:2rem;">
-      <div style="font-size:3rem;margin-bottom:1rem;">🗳️</div>
-      <div style="font-size:.95rem;color:var(--muted2);line-height:1.7;">Her 24 saatte bir oy verebilirsin. Oy verince sunucuya girdiğinde özel ödül alırsın!</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+    <!-- Oy verme kutusu -->
+    <div class="gc" style="padding:2.5rem;">
+      <div style="text-align:center;margin-bottom:2rem;">
+        <div style="font-size:3rem;margin-bottom:1rem;">🗳️</div>
+        <div style="font-size:.95rem;color:var(--muted2);line-height:1.7;">Her 24 saatte bir oy verebilirsin. Oy verince sunucuya girdiğinde özel ödül alırsın!</div>
+      </div>
+      <input id="vote-username" placeholder="Minecraft kullanıcı adın..." style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;font-size:.9rem;padding:.85rem 1rem;outline:none;margin-bottom:1rem;transition:border-color .2s;" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--border)'">
+      <button onclick="submitVote()" id="vote-btn" style="width:100%;background:linear-gradient(135deg,var(--orange),var(--red));border:none;border-radius:12px;color:white;font-family:'Press Start 2P',monospace;font-size:.65rem;padding:1rem;cursor:pointer;transition:all .2s;box-shadow:0 4px 20px rgba(255,107,53,.3);">🗳️ Oy Ver</button>
+      <div id="vote-msg" style="margin-top:1rem;text-align:center;font-size:.85rem;display:none;"></div>
     </div>
-    <input id="vote-username" placeholder="Minecraft kullanıcı adın..." style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;font-size:.9rem;padding:.85rem 1rem;outline:none;margin-bottom:1rem;transition:border-color .2s;" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--border)'">
-    <button onclick="submitVote()" id="vote-btn" style="width:100%;background:linear-gradient(135deg,var(--orange),var(--red));border:none;border-radius:12px;color:white;font-family:'Press Start 2P',monospace;font-size:.65rem;padding:1rem;cursor:pointer;transition:all .2s;box-shadow:0 4px 20px rgba(255,107,53,.3);">🗳️ Oy Ver</button>
-    <div id="vote-msg" style="margin-top:1rem;text-align:center;font-size:.85rem;display:none;"></div>
+    <!-- Skor tablosu -->
+    <div class="gc" style="overflow:hidden;">
+      <div style="padding:1.5rem 1.5rem 1rem;font-family:'Press Start 2P',monospace;font-size:.55rem;color:var(--orange);">🏆 En Çok Oy Verenler</div>
+      <div id="vote-lb"><div style="text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;">Yükleniyor...</div></div>
+    </div>
   </div>
 </div>
 
@@ -841,7 +849,23 @@ try {
 } catch(e) {}
 
 // OY VER
-async function submitVote() {
+async function loadVoteLb() {
+  try {
+    const r = await fetch(API+'/api/vote/leaderboard');
+    const d = await r.json();
+    const lb = document.getElementById('vote-lb');
+    if (!d.length) { lb.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);font-size:.8rem;">Henüz oy yok.</div>'; return; }
+    const medals = ['🥇','🥈','🥉'];
+    lb.innerHTML = d.map((p,i) => `
+      <div class="lb-row" style="${i===0?'background:rgba(255,214,10,.05);':''}">
+        <span class="lb-rank ${i<3?'r'+(i+1):'other'}">${i<3?medals[i]:i+1}</span>
+        <span class="lb-name">${p.minecraft_username}</span>
+        <span class="lb-val">${p.total_votes} oy</span>
+      </div>
+    `).join('');
+  } catch {}
+}
+loadVoteLb();
   const username = document.getElementById('vote-username').value.trim();
   const msg = document.getElementById('vote-msg');
   const btn = document.getElementById('vote-btn');
@@ -867,6 +891,7 @@ async function submitVote() {
       btn.style.background = 'linear-gradient(135deg,var(--neon),#00c853)';
       btn.style.opacity = '1';
       document.getElementById('vote-username').value = '';
+      loadVoteLb();
     } else {
       msg.style.color = 'var(--red)';
       if (d.next_vote) {
