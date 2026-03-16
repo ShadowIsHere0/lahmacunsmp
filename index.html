@@ -922,7 +922,7 @@ async function checkStatus() {
       st.innerHTML = '<span class="pdot"></span>Cevrimici'; st.className = 'stat-val';
       pc.textContent = d.players?.online ?? '0'; pc.className = 'stat-val';
       mp.textContent = d.players?.max ?? '-';
-      sv.textContent = d.version ?? '-';
+      sv.textContent = '1.21.11';
     } else {
       dot.className = 'pdot off';
       st.innerHTML = '<span class="pdot off"></span>Cevrimdisi'; st.className = 'stat-val off';
@@ -936,7 +936,7 @@ async function checkStatus() {
     document.getElementById('player-count').textContent = 'Sunucu kapali!';
     document.getElementById('player-count').className = 'stat-val off';
     document.getElementById('max-players').textContent = '-';
-    document.getElementById('server-version').textContent = '-';
+    document.getElementById('server-version').textContent = '1.21.11';
   }
 }
 checkStatus(); setInterval(checkStatus, 60000);
