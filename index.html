@@ -1204,32 +1204,50 @@ async function loadAdminLb() {
   try {
     const r = await fetch(API+'/api/leaderboard');
     const d = await r.json();
-    const players = ['KuzeyHere','benseref729','Metanoid','Darkiyuuu','Booster'];
     const container = document.getElementById('admin-lb-form');
+    const players = [...new Set([...d.kills.map(p=>p.username), ...d.deaths.map(p=>p.username), ...d.online.map(p=>p.username)])];
     container.innerHTML = players.map(name => {
       const k = d.kills.find(p=>p.username===name);
       const de = d.deaths.find(p=>p.username===name);
       const o = d.online.find(p=>p.username===name);
-      return '<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.75rem;"><div style="font-weight:700;margin-bottom:.75rem;color:var(--orange);">'+name+'</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;"><div><label style="font-size:.75rem;color:var(--muted2);display:block;margin-bottom:.3rem;">Kill</label><input type="number" id="k-'+name+'" value="'+(k?.value??0)+'" style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.4rem .6rem;font-size:.85rem;outline:none;"></div><div><label style="font-size:.75rem;color:var(--muted2);display:block;margin-bottom:.3rem;">Olum</label><input type="number" id="d-'+name+'" value="'+(de?.value??0)+'" style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.4rem .6rem;font-size:.85rem;outline:none;"></div><div><label style="font-size:.75rem;color:var(--muted2);display:block;margin-bottom:.3rem;">Sure (s)</label><input type="number" id="o-'+name+'" value="'+(o?.value??0)+'" style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.4rem .6rem;font-size:.85rem;outline:none;"></div></div></div>';
-    }).join('');
+      return '<div style="background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:1rem;margin-bottom:.75rem;"><div style="font-weight:700;margin-bottom:.75rem;color:var(--orange);">'+name+'</div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;"><div><label style="font-size:.75rem;color:var(--muted2);display:block;margin-bottom:.3rem;">Kill</label><input type="number" id="k-'+name+'" value="'+(k?.value??0)+'" style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.4rem .6rem;font-size:.85rem;outline:none;"></div><div><label style="font-size:.75rem;color:var(--muted2);display:block;margin-bottom:.3rem;">Ölüm</label><input type="number" id="d-'+name+'" value="'+(de?.value??0)+'" style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.4rem .6rem;font-size:.85rem;outline:none;"></div><div><label style="font-size:.75rem;color:var(--muted2);display:block;margin-bottom:.3rem;">Süre (s)</label><input type="number" id="o-'+name+'" value="'+(o?.value??0)+'" style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.4rem .6rem;font-size:.85rem;outline:none;"></div></div></div>';
+    }).join('') + '<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);"><div style="font-family:\'Press Start 2P\',monospace;font-size:.5rem;color:var(--orange);margin-bottom:.75rem;">+ YENİ OYUNCU EKLE</div><input id="new-lb-player" placeholder="Oyuncu adı..." style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:.6rem .9rem;font-size:.85rem;outline:none;margin-bottom:.5rem;"><button onclick="addLbPlayer()" style="width:100%;background:linear-gradient(135deg,var(--neon),#00c853);border:none;border-radius:8px;color:#000;font-family:\'Press Start 2P\',monospace;font-size:.5rem;padding:.7rem;cursor:pointer;">Ekle</button></div>';
   } catch { console.error('Admin lb yuklenemedi'); }
 }
 
 async function saveAdminLb() {
-  const players = ['KuzeyHere','benseref729','Metanoid','Darkiyuuu','Booster'];
+  const r = await fetch(API+'/api/leaderboard');
+  const d = await r.json();
+  const players = [...new Set([...d.kills.map(p=>p.username), ...d.deaths.map(p=>p.username), ...d.online.map(p=>p.username)])];
   const btn = document.getElementById('save-lb-btn');
   btn.textContent = 'Kaydediliyor...';
   try {
     for (const name of players) {
+      const kEl = document.getElementById('k-'+name);
+      const dEl = document.getElementById('d-'+name);
+      const oEl = document.getElementById('o-'+name);
+      if (!kEl) continue;
       await fetch(API+'/api/leaderboard/update', {
         method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ password: adminPassword, username: name, kills: parseInt(document.getElementById('k-'+name).value)||0, deaths: parseInt(document.getElementById('d-'+name).value)||0, online_hours: parseFloat(document.getElementById('o-'+name).value)||0 })
+        body: JSON.stringify({ password: adminPassword, username: name, kills: parseInt(kEl.value)||0, deaths: parseInt(dEl.value)||0, online_hours: parseFloat(oEl.value)||0 })
       });
     }
     btn.textContent = 'Kaydedildi!';
     loadLeaderboard();
     setTimeout(()=>btn.textContent='Kaydet',2000);
   } catch { btn.textContent = 'Hata!'; setTimeout(()=>btn.textContent='Kaydet',2000); }
+}
+
+async function addLbPlayer() {
+  const username = document.getElementById('new-lb-player').value.trim();
+  if (!username) return alert('Oyuncu adı gerekli!');
+  await fetch(API+'/api/leaderboard/update', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ password: adminPassword, username, kills: 0, deaths: 0, online_hours: 0 })
+  });
+  document.getElementById('new-lb-player').value = '';
+  loadAdminLb();
+  loadLeaderboard();
 }
 
 async function loadAdminTeam() {
