@@ -866,6 +866,8 @@ async function loadVoteLb() {
   } catch {}
 }
 loadVoteLb();
+
+async function submitVote() {
   const username = document.getElementById('vote-username').value.trim();
   const msg = document.getElementById('vote-msg');
   const btn = document.getElementById('vote-btn');
