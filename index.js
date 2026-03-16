@@ -157,5 +157,86 @@ app.post('/api/team/delete', (req, res) => {
 
 app.get('/', (req, res) => res.json({ message: 'LahmacunSMP API calisiyor!' }));
 
+// OY SİSTEMİ
+db.exec(`
+  CREATE TABLE IF NOT EXISTS votes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    minecraft_username TEXT NOT NULL,
+    ip TEXT,
+    rewarded INTEGER DEFAULT 0,
+    voted_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
+// Oy ver
+app.post('/api/vote', (req, res) => {
+  const { minecraft_username } = req.body;
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+  if (!minecraft_username) return res.status(400).json({ error: 'Kullanıcı adı gerekli' });
+
+  // Son 24 saatte aynı kullanıcı veya IP oy vermiş mi?
+  const lastVoteByUser = db.prepare(`
+    SELECT * FROM votes WHERE minecraft_username = ? AND voted_at > datetime('now', '-24 hours')
+  `).get(minecraft_username);
+
+  if (lastVoteByUser) {
+    const nextVote = new Date(lastVoteByUser.voted_at);
+    nextVote.setHours(nextVote.getHours() + 24);
+    return res.status(400).json({ error: 'Zaten oy verdin!', next_vote: nextVote });
+  }
+
+  db.prepare('INSERT INTO votes (minecraft_username, ip) VALUES (?, ?)').run(minecraft_username, ip);
+  
+  // Liderlik tablosuna oyuncu yoksa ekle
+  db.prepare(`INSERT OR IGNORE INTO leaderboard (username) VALUES (?)`).run(minecraft_username);
+
+  res.json({ success: true, message: 'Oy verildi! Ödülün sunucuya girince verilecek.' });
+});
+
+// Oy durumu sorgula
+app.get('/api/vote/status', (req, res) => {
+  const { username } = req.query;
+  if (!username) return res.status(400).json({ error: 'Kullanıcı adı gerekli' });
+  
+  const lastVote = db.prepare(`
+    SELECT * FROM votes WHERE minecraft_username = ? ORDER BY voted_at DESC LIMIT 1
+  `).get(username);
+
+  if (!lastVote) return res.json({ can_vote: true });
+
+  const nextVote = new Date(lastVote.voted_at);
+  nextVote.setHours(nextVote.getHours() + 24);
+  const canVote = new Date() > nextVote;
+
+  res.json({ can_vote: canVote, next_vote: nextVote, last_vote: lastVote.voted_at });
+});
+
+// Bekleyen ödüller (plugin tarafından çekilecek)
+app.get('/api/vote/pending', (req, res) => {
+  const { password } = req.query;
+  if (password !== ADMIN_PASS) return res.status(401).json({ error: 'Yetkisiz' });
+  const pending = db.prepare(`
+    SELECT * FROM votes WHERE rewarded = 0 ORDER BY voted_at ASC
+  `).all();
+  res.json(pending);
+});
+
+// Ödül verildi işaretle
+app.post('/api/vote/rewarded', (req, res) => {
+  const { password, id } = req.body;
+  if (password !== ADMIN_PASS) return res.status(401).json({ error: 'Yetkisiz' });
+  db.prepare('UPDATE votes SET rewarded = 1 WHERE id = ?').run(id);
+  res.json({ success: true });
+});
+
+// Oy liderlik tablosu
+app.get('/api/vote/leaderboard', (req, res) => {
+  const rows = db.prepare(`
+    SELECT minecraft_username, COUNT(*) as total_votes 
+    FROM votes GROUP BY minecraft_username ORDER BY total_votes DESC LIMIT 10
+  `).all();
+  res.json(rows);
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Sunucu ${PORT} portunda calisiyor`));

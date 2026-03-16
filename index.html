@@ -271,6 +271,7 @@ footer { text-align:center; padding:3rem 2rem; border-top:1px solid var(--border
     <a class="nav-link" href="#modlar">Modlar</a>
     <a class="nav-link" href="#tarih">Tarih</a>
     <a class="nav-link" href="#sss">SSS</a>
+    <a class="nav-link" href="#oy">Oy Ver</a>
     <a class="nav-discord" href="https://discord.gg/cVhFm9uMpJ" target="_blank">
       <svg width="15" height="15" viewBox="0 0 71 55" fill="white"><path d="M60.1 4.9A58.5 58.5 0 0 0 45.5.4a.2.2 0 0 0-.2.1 40.7 40.7 0 0 0-1.8 3.7 54 54 0 0 0-16.2 0A37.8 37.8 0 0 0 25.5.5a.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.7 4.9a.2.2 0 0 0-.1.1C1.5 18.5-1 31.7.3 44.7a.2.2 0 0 0 .1.2 58.8 58.8 0 0 0 17.7 9 .2.2 0 0 0 .2-.1 42 42 0 0 0 3.6-5.9.2.2 0 0 0-.1-.3 38.7 38.7 0 0 1-5.5-2.6.2.2 0 0 1 0-.4l1.1-.9a.2.2 0 0 1 .2 0c11.5 5.3 24 5.3 35.4 0a.2.2 0 0 1 .2 0l1.1.9a.2.2 0 0 1 0 .4 36.1 36.1 0 0 1-5.5 2.6.2.2 0 0 0-.1.3 47.1 47.1 0 0 0 3.6 5.9.2.2 0 0 0 .2.1 58.6 58.6 0 0 0 17.8-9 .2.2 0 0 0 .1-.2c1.5-15.2-2.5-28.3-10.5-40a.2.2 0 0 0-.1 0zM23.7 37c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.2 6.4 7.2 0 4-2.8 7.2-6.4 7.2zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.2 6.4 7.2 0 4-2.8 7.2-6.4 7.2z"/></svg>
       Discord
@@ -535,6 +536,23 @@ footer { text-align:center; padding:3rem 2rem; border-top:1px solid var(--border
     <div class="tl-item"><div class="tl-date">08.03.2026 — 15:55</div><div class="tl-title">LahmacunSMP Açıldı</div><div class="tl-desc">Birkaç arkadaş bir araya gelerek eğlenceli, rollere sahip bir SMP sunucusu kurmaya karar verdi. Dört kurucu üye sunucuya bağlandı ve ilk taşı koydu.</div></div>
     <div class="tl-item"><div class="tl-date">08.03.2026</div><div class="tl-title">Roller ve Kural Sistemi Oluşturuldu</div><div class="tl-desc">Kurucu, Rehber, VIP, MVIP ve RVIP rolleri tanımlandı. Temel kurallar belirlendi.</div></div>
     <div class="tl-item"><div class="tl-date">Yakında</div><div class="tl-title">İlk Büyük Güncelleme</div><div class="tl-desc">Sunucuya özel datapack'ler ve yeni oyun mekanikleri eklenecek. Tarih yazılmaya devam ediyor...</div></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- OY VER -->
+<div class="sw" id="oy">
+  <div class="sec-label">destek ol</div>
+  <div class="sec-title"><span class="acc">Sunucuya</span> Oy Ver</div>
+  <div class="gc" style="padding:2.5rem;max-width:500px;margin:0 auto;">
+    <div style="text-align:center;margin-bottom:2rem;">
+      <div style="font-size:3rem;margin-bottom:1rem;">🗳️</div>
+      <div style="font-size:.95rem;color:var(--muted2);line-height:1.7;">Her 24 saatte bir oy verebilirsin. Oy verince sunucuya girdiğinde özel ödül alırsın!</div>
+    </div>
+    <input id="vote-username" placeholder="Minecraft kullanıcı adın..." style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;font-size:.9rem;padding:.85rem 1rem;outline:none;margin-bottom:1rem;transition:border-color .2s;" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--border)'">
+    <button onclick="submitVote()" id="vote-btn" style="width:100%;background:linear-gradient(135deg,var(--orange),var(--red));border:none;border-radius:12px;color:white;font-family:'Press Start 2P',monospace;font-size:.65rem;padding:1rem;cursor:pointer;transition:all .2s;box-shadow:0 4px 20px rgba(255,107,53,.3);">🗳️ Oy Ver</button>
+    <div id="vote-msg" style="margin-top:1rem;text-align:center;font-size:.85rem;display:none;"></div>
   </div>
 </div>
 
@@ -822,7 +840,52 @@ try {
   });
 } catch(e) {}
 
-// ADMIN SEKME
+// OY VER
+async function submitVote() {
+  const username = document.getElementById('vote-username').value.trim();
+  const msg = document.getElementById('vote-msg');
+  const btn = document.getElementById('vote-btn');
+  if (!username) { 
+    msg.style.display = 'block';
+    msg.style.color = 'var(--red)';
+    msg.textContent = 'Kullanıcı adını gir!';
+    return; 
+  }
+  btn.textContent = 'Gönderiliyor...';
+  btn.style.opacity = '.7';
+  try {
+    const r = await fetch(API+'/api/vote', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ minecraft_username: username })
+    });
+    const d = await r.json();
+    msg.style.display = 'block';
+    if (d.success) {
+      msg.style.color = 'var(--neon)';
+      msg.textContent = '✅ Oy verildi! Sunucuya girince ödülünü alacaksın.';
+      btn.textContent = '✅ Oy Verildi!';
+      btn.style.background = 'linear-gradient(135deg,var(--neon),#00c853)';
+      btn.style.opacity = '1';
+      document.getElementById('vote-username').value = '';
+    } else {
+      msg.style.color = 'var(--red)';
+      if (d.next_vote) {
+        const next = new Date(d.next_vote);
+        msg.textContent = `❌ Zaten oy verdin! Sonraki oy: ${next.toLocaleString('tr-TR')}`;
+      } else {
+        msg.textContent = '❌ ' + d.error;
+      }
+      btn.textContent = '🗳️ Oy Ver';
+      btn.style.opacity = '1';
+    }
+  } catch {
+    msg.style.display = 'block';
+    msg.style.color = 'var(--red)';
+    msg.textContent = '❌ Bağlantı hatası, tekrar dene.';
+    btn.textContent = '🗳️ Oy Ver';
+    btn.style.opacity = '1';
+  }
+}
 function adminTab(tab) {
   ['lb','team','ann','apps'].forEach(t => {
     document.getElementById('admin-tab-'+t).style.display = t===tab ? 'block' : 'none';
