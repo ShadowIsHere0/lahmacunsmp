@@ -155,7 +155,79 @@ app.post('/api/team/delete', (req, res) => {
   res.json({ success: true });
 });
 
-app.get('/', (req, res) => res.json({ message: 'LahmacunSMP API calisiyor!' }));
+// MESAJLAŞMA
+db.exec(`
+  CREATE TABLE IF NOT EXISTS messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sender TEXT NOT NULL,
+    receiver TEXT NOT NULL,
+    content TEXT NOT NULL,
+    read INTEGER DEFAULT 0,
+    sent_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
+// Mesaj gönder
+app.post('/api/messages/send', (req, res) => {
+  const { sender, receiver, content } = req.body;
+  if (!sender || !receiver || !content) return res.status(400).json({ error: 'Eksik alan' });
+  if (content.length > 500) return res.status(400).json({ error: 'Mesaj çok uzun' });
+
+  // Spam önleme: aynı kişiden son 2 saniyede mesaj var mı?
+  const lastMsg = db.prepare(`
+    SELECT * FROM messages WHERE sender = ? AND sent_at > datetime('now', '-2 seconds')
+  `).get(sender);
+  if (lastMsg) return res.status(429).json({ error: 'Çok hızlı mesaj gönderiyorsun!' });
+
+  db.prepare('INSERT INTO messages (sender, receiver, content) VALUES (?, ?, ?)').run(sender, receiver, content);
+  res.json({ success: true });
+});
+
+// Sohbet geçmişi
+app.get('/api/messages/conversation', (req, res) => {
+  const { user1, user2 } = req.query;
+  if (!user1 || !user2) return res.status(400).json({ error: 'Eksik alan' });
+  const msgs = db.prepare(`
+    SELECT * FROM messages 
+    WHERE (sender=? AND receiver=?) OR (sender=? AND receiver=?)
+    ORDER BY sent_at ASC LIMIT 50
+  `).all(user1, user2, user2, user1);
+  res.json(msgs);
+});
+
+// Yeni mesajlar (polling için)
+app.get('/api/messages/new', (req, res) => {
+  const { username, since } = req.query;
+  if (!username) return res.status(400).json({ error: 'Eksik alan' });
+  const sinceDate = since || new Date(Date.now() - 5000).toISOString();
+  const msgs = db.prepare(`
+    SELECT * FROM messages WHERE receiver=? AND sent_at > ? ORDER BY sent_at ASC
+  `).all(username, sinceDate);
+  res.json(msgs);
+});
+
+// Konuşmalar listesi
+app.get('/api/messages/conversations', (req, res) => {
+  const { username } = req.query;
+  if (!username) return res.status(400).json({ error: 'Eksik alan' });
+  const convs = db.prepare(`
+    SELECT DISTINCT 
+      CASE WHEN sender=? THEN receiver ELSE sender END as other_user,
+      MAX(sent_at) as last_at,
+      (SELECT content FROM messages m2 WHERE (m2.sender=messages.sender AND m2.receiver=messages.receiver) OR (m2.sender=messages.receiver AND m2.receiver=messages.sender) ORDER BY m2.sent_at DESC LIMIT 1) as last_message,
+      (SELECT COUNT(*) FROM messages m3 WHERE m3.receiver=? AND m3.sender=(CASE WHEN messages.sender=? THEN messages.receiver ELSE messages.sender END) AND m3.read=0) as unread
+    FROM messages WHERE sender=? OR receiver=?
+    GROUP BY other_user ORDER BY last_at DESC
+  `).all(username, username, username, username, username);
+  res.json(convs);
+});
+
+// Mesajları okundu işaretle
+app.post('/api/messages/read', (req, res) => {
+  const { username, other_user } = req.body;
+  db.prepare('UPDATE messages SET read=1 WHERE receiver=? AND sender=?').run(username, other_user);
+  res.json({ success: true });
+});
 
 // OY SİSTEMİ
 db.exec(`

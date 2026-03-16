@@ -225,7 +225,34 @@ body { background:var(--bg); color:var(--text); font-family:'Outfit',sans-serif;
 .faq-a { max-height:0; overflow:hidden; transition:max-height .35s ease,padding .2s; padding:0 1.4rem; color:var(--muted2); font-size:.88rem; line-height:1.7; }
 .faq-item.open .faq-a { max-height:220px; padding:0 1.4rem 1.1rem; }
 
-/* FOOTER */
+/* MESAJLAŞMA */
+.chat-window { position:fixed; bottom:2rem; right:5rem; width:320px; background:#0f1520; border:1px solid var(--border2); border-radius:16px; z-index:800; box-shadow:0 8px 30px rgba(0,0,0,.5); display:none; flex-direction:column; max-height:450px; animation:min .3s cubic-bezier(.34,1.56,.64,1); }
+.chat-window.open { display:flex; }
+.chat-header { display:flex; align-items:center; gap:.75rem; padding:1rem 1.2rem; border-bottom:1px solid var(--border); }
+.chat-header-name { font-weight:700; font-size:.9rem; flex:1; }
+.chat-close { background:none; border:none; color:var(--muted); cursor:pointer; font-size:1rem; }
+.chat-messages { flex:1; overflow-y:auto; padding:1rem; display:flex; flex-direction:column; gap:.5rem; min-height:200px; }
+.chat-msg { max-width:80%; padding:.5rem .9rem; border-radius:12px; font-size:.85rem; line-height:1.5; word-break:break-word; }
+.chat-msg.sent { background:linear-gradient(135deg,var(--orange),var(--red)); color:white; align-self:flex-end; border-bottom-right-radius:4px; }
+.chat-msg.recv { background:var(--surface2); color:var(--text); align-self:flex-start; border-bottom-left-radius:4px; }
+.chat-msg-time { font-size:.65rem; opacity:.6; margin-top:.2rem; }
+.chat-input-wrap { display:flex; gap:.5rem; padding:.75rem; border-top:1px solid var(--border); }
+.chat-input { flex:1; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'Outfit',sans-serif; font-size:.85rem; padding:.5rem .75rem; outline:none; }
+.chat-input:focus { border-color:var(--orange); }
+.chat-send { background:linear-gradient(135deg,var(--orange),var(--red)); border:none; border-radius:8px; color:white; padding:.5rem .9rem; cursor:pointer; font-size:.9rem; }
+
+/* MESAJ BİLDİRİMİ */
+.msg-notif { position:fixed; top:80px; right:1.5rem; background:linear-gradient(135deg,rgba(0,245,160,.15),rgba(0,217,245,.15)); border:1px solid rgba(0,245,160,.3); border-radius:12px; padding:.75rem 1.2rem; color:var(--neon); font-size:.85rem; font-weight:600; z-index:999; transform:translateX(120%); transition:transform .3s cubic-bezier(.34,1.56,.64,1); max-width:300px; }
+.msg-notif.show { transform:translateX(0); }
+
+/* SOHBET MODAL */
+.chat-modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.85); backdrop-filter:blur(8px); z-index:1500; display:none; align-items:center; justify-content:center; padding:1rem; }
+.chat-modal-overlay.active { display:flex; }
+.chat-modal { background:#0f1520; border:1px solid var(--border2); border-radius:24px; padding:2rem; max-width:600px; width:100%; max-height:85vh; overflow-y:auto; position:relative; }
+.chat-modal::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--neon),transparent); }
+.conv-item { display:flex; align-items:center; gap:.75rem; padding:1rem; background:var(--surface); border:1px solid var(--border); border-radius:12px; cursor:pointer; transition:all .2s; margin-bottom:.5rem; }
+.conv-item:hover { border-color:var(--orange); background:rgba(255,107,53,.05); }
+.conv-unread { background:var(--orange); color:white; font-family:'Press Start 2P',monospace; font-size:.4rem; padding:.2rem .5rem; border-radius:99px; }
 footer { text-align:center; padding:3rem 2rem; border-top:1px solid var(--border); color:var(--muted); font-size:.82rem; }
 .foot-logo { font-family:'Press Start 2P',monospace; font-size:.6rem; background:linear-gradient(90deg,var(--orange),var(--neon)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; display:block; margin-bottom:.75rem; }
 #btt { position:fixed; bottom:2rem; right:2rem; background:linear-gradient(135deg,var(--orange),var(--red)); border:none; border-radius:50%; width:50px; height:50px; color:white; font-size:1.3rem; cursor:pointer; opacity:0; pointer-events:none; transition:opacity .3s,transform .2s; z-index:700; box-shadow:0 4px 20px rgba(255,107,53,.4); }
@@ -256,15 +283,121 @@ footer { text-align:center; padding:3rem 2rem; border-top:1px solid var(--border
 .search-input:focus { border-color:var(--orange); }
 .search-btn { background:linear-gradient(135deg,var(--orange),var(--red)); border:none; border-radius:12px; color:white; font-family:'Outfit',sans-serif; font-weight:700; font-size:.9rem; padding:.85rem 1.5rem; cursor:pointer; transition:all .2s; }
 .search-btn:hover { transform:scale(1.05); }
+
+/* MESAJLAŞMA */
+.chat-window { position:fixed; bottom:5rem; right:2rem; width:320px; background:#0f1520; border:1px solid var(--border2); border-radius:20px; z-index:1200; box-shadow:0 20px 60px rgba(0,0,0,.5); display:none; flex-direction:column; overflow:hidden; animation:min .25s cubic-bezier(.34,1.56,.64,1); }
+.chat-window.active { display:flex; }
+.chat-header { padding:1rem 1.2rem; background:rgba(255,255,255,.04); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:.75rem; }
+.chat-header-av { width:36px; height:36px; border-radius:8px; image-rendering:pixelated; object-fit:cover; object-position:top; }
+.chat-header-name { font-family:'Press Start 2P',monospace; font-size:.55rem; flex:1; }
+.chat-close { background:none; border:none; color:var(--muted); cursor:pointer; font-size:1.1rem; }
+.chat-msgs { flex:1; padding:1rem; overflow-y:auto; max-height:280px; display:flex; flex-direction:column; gap:.5rem; }
+.chat-msg { max-width:80%; padding:.6rem .9rem; border-radius:12px; font-size:.85rem; line-height:1.5; word-break:break-word; }
+.chat-msg.sent { background:linear-gradient(135deg,var(--orange),var(--red)); color:white; align-self:flex-end; border-radius:12px 12px 4px 12px; }
+.chat-msg.recv { background:var(--surface2); color:var(--text); align-self:flex-start; border-radius:12px 12px 12px 4px; }
+.chat-msg-time { font-size:.65rem; opacity:.6; margin-top:.2rem; }
+.chat-input-wrap { padding:.75rem; border-top:1px solid var(--border); display:flex; gap:.5rem; }
+.chat-input { flex:1; background:rgba(255,255,255,.06); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:'Outfit',sans-serif; font-size:.85rem; padding:.55rem .85rem; outline:none; }
+.chat-input:focus { border-color:var(--orange); }
+.chat-send { background:linear-gradient(135deg,var(--orange),var(--red)); border:none; border-radius:10px; color:white; font-size:1rem; width:36px; height:36px; cursor:pointer; transition:all .2s; flex-shrink:0; }
+.chat-send:hover { transform:scale(1.1); }
+
+/* BİLDİRİM */
+.notif-toast { position:fixed; top:5rem; right:2rem; background:#0f1520; border:1px solid rgba(0,245,160,.3); border-radius:12px; padding:.85rem 1.2rem; z-index:2000; display:none; align-items:center; gap:.75rem; box-shadow:0 8px 30px rgba(0,0,0,.4); animation:min .3s cubic-bezier(.34,1.56,.64,1); max-width:300px; }
+.notif-dot { width:10px; height:10px; border-radius:50%; background:var(--neon); flex-shrink:0; animation:pdot 1s infinite; }
+.notif-text { font-size:.82rem; color:var(--text); line-height:1.4; }
+
+/* SOHBET SAYFASI */
+.conv-item { display:flex; align-items:center; gap:.85rem; padding:1rem 1.2rem; border-bottom:1px solid var(--border); cursor:pointer; transition:background .2s; }
+.conv-item:hover { background:rgba(255,255,255,.03); }
+.conv-av { width:44px; height:44px; border-radius:10px; image-rendering:pixelated; object-fit:cover; object-position:top; flex-shrink:0; }
+.conv-name { font-weight:700; font-size:.9rem; margin-bottom:.2rem; }
+.conv-last { font-size:.78rem; color:var(--muted2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; }
+.conv-unread { background:var(--orange); color:white; font-size:.7rem; font-weight:700; border-radius:99px; padding:.2rem .55rem; flex-shrink:0; }
 </style>
 </head>
 <body>
 
-<!-- LOADING -->
-<div id="loading-screen">
+<!-- MESAJ BİLDİRİMİ -->
+<div class="msg-notif" id="msg-notif"></div>
+
+<!-- SOHBET PENCERESİ -->
+<div class="chat-window" id="chat-window">
+  <div class="chat-header">
+    <img id="chat-av" src="" style="width:32px;height:32px;border-radius:8px;image-rendering:pixelated;" onerror="this.src='https://mc-heads.net/avatar/steve/32'">
+    <div class="chat-header-name" id="chat-header-name">—</div>
+    <button class="chat-close" onclick="closeChatWindow()">✕</button>
+  </div>
+  <div class="chat-messages" id="chat-messages"></div>
+  <div class="chat-input-wrap">
+    <input class="chat-input" id="chat-input" placeholder="Mesaj yaz..." maxlength="200" onkeydown="if(event.key==='Enter')sendMessage()">
+    <button class="chat-send" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<!-- SOHBET MODAL -->
+<div class="chat-modal-overlay" id="chat-modal-overlay" onclick="closeChatModal(event)">
+  <div class="chat-modal">
+    <button onclick="document.getElementById('chat-modal-overlay').classList.remove('active')" style="position:absolute;top:1rem;right:1rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1rem;">✕</button>
+    <div style="font-family:'Press Start 2P',monospace;font-size:.7rem;color:var(--neon);margin-bottom:.5rem;">💬 Sohbet Mesajları</div>
+    <div style="font-size:.85rem;color:var(--muted2);margin-bottom:1.5rem;">Kullanıcı adın nedir?</div>
+    <div id="chat-username-section">
+      <input id="chat-my-username" placeholder="Minecraft kullanıcı adın..." style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;font-size:.9rem;padding:.75rem 1rem;outline:none;margin-bottom:.75rem;">
+      <button onclick="loadConversations()" style="width:100%;background:linear-gradient(135deg,var(--neon),#00c853);border:none;border-radius:10px;color:#000;font-family:'Press Start 2P',monospace;font-size:.6rem;padding:.9rem;cursor:pointer;">Sohbetleri Gör</button>
+    </div>
+    <div id="chat-conv-list" style="display:none;">
+      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;">
+        <button onclick="document.getElementById('chat-conv-list').style.display='none';document.getElementById('chat-username-section').style.display='block';" style="background:var(--surface);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:.4rem .8rem;cursor:pointer;font-size:.8rem;">← Geri</button>
+        <span style="font-size:.85rem;font-weight:700;" id="conv-my-name"></span>
+      </div>
+      <div id="conversations-list"><div style="text-align:center;color:var(--muted);padding:2rem;">Henüz sohbet yok.</div></div>
+    </div>
+  </div>
+</div>
   <div class="loading-logo">LahmacunSMP</div>
   <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
   <div class="loading-txt" id="loading-txt">Yükleniyor...</div>
+</div>
+
+<!-- BİLDİRİM -->
+<div class="notif-toast" id="notif-toast">
+  <div class="notif-dot"></div>
+  <div class="notif-text" id="notif-text"></div>
+</div>
+
+<!-- SOHBET PENCERESİ -->
+<div class="chat-window" id="chat-window">
+  <div class="chat-header">
+    <img class="chat-header-av" id="chat-av" src="" alt="">
+    <div class="chat-header-name" id="chat-name"></div>
+    <button class="chat-close" onclick="closeChat()">✕</button>
+  </div>
+  <div class="chat-msgs" id="chat-msgs"></div>
+  <div class="chat-input-wrap">
+    <input class="chat-input" id="chat-input" placeholder="Mesaj yaz..." maxlength="500" onkeydown="if(event.key==='Enter')sendChatMsg()">
+    <button class="chat-send" onclick="sendChatMsg()">➤</button>
+  </div>
+</div>
+
+<!-- KULLANICI GİRİŞ MODAL -->
+<div id="username-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:1600;display:none;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:#0f1520;border:1px solid var(--border2);border-radius:24px;padding:2.5rem;max-width:400px;width:100%;position:relative;">
+    <div style="font-family:'Press Start 2P',monospace;font-size:.7rem;color:var(--orange);margin-bottom:.5rem;">KULLANICI ADI</div>
+    <div style="font-size:.85rem;color:var(--muted2);margin-bottom:1.5rem;">Mesajlaşmak için Minecraft kullanıcı adını gir.</div>
+    <input id="chat-myname" placeholder="Minecraft kullanıcı adın..." style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Outfit',sans-serif;font-size:.9rem;padding:.75rem 1rem;outline:none;margin-bottom:1rem;" onkeydown="if(event.key==='Enter')setChatUser()">
+    <button onclick="setChatUser()" style="width:100%;background:linear-gradient(135deg,var(--orange),var(--red));border:none;border-radius:10px;color:white;font-family:'Press Start 2P',monospace;font-size:.6rem;padding:.9rem;cursor:pointer;">Devam Et</button>
+  </div>
+</div>
+
+<!-- SOHBET SAYFASI MODAL -->
+<div id="convs-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);z-index:1500;display:none;align-items:center;justify-content:center;padding:1rem;" onclick="closeConvs(event)">
+  <div style="background:#0f1520;border:1px solid var(--border2);border-radius:24px;max-width:520px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;position:relative;" onclick="event.stopPropagation()">
+    <div style="padding:1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-family:'Press Start 2P',monospace;font-size:.65rem;color:var(--orange);">💬 Sohbet Mesajları</div>
+      <button onclick="document.getElementById('convs-overlay').style.display='none'" style="background:var(--surface2);border:1px solid var(--border);color:var(--muted);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1rem;">✕</button>
+    </div>
+    <div id="convs-list" style="overflow-y:auto;flex:1;"></div>
+  </div>
 </div>
 
 <!-- PROFİL MODAL -->
@@ -317,6 +450,8 @@ footer { text-align:center; padding:3rem 2rem; border-top:1px solid var(--border
       <svg width="15" height="15" viewBox="0 0 71 55" fill="white"><path d="M60.1 4.9A58.5 58.5 0 0 0 45.5.4a.2.2 0 0 0-.2.1 40.7 40.7 0 0 0-1.8 3.7 54 54 0 0 0-16.2 0A37.8 37.8 0 0 0 25.5.5a.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.7 4.9a.2.2 0 0 0-.1.1C1.5 18.5-1 31.7.3 44.7a.2.2 0 0 0 .1.2 58.8 58.8 0 0 0 17.7 9 .2.2 0 0 0 .2-.1 42 42 0 0 0 3.6-5.9.2.2 0 0 0-.1-.3 38.7 38.7 0 0 1-5.5-2.6.2.2 0 0 1 0-.4l1.1-.9a.2.2 0 0 1 .2 0c11.5 5.3 24 5.3 35.4 0a.2.2 0 0 1 .2 0l1.1.9a.2.2 0 0 1 0 .4 36.1 36.1 0 0 1-5.5 2.6.2.2 0 0 0-.1.3 47.1 47.1 0 0 0 3.6 5.9.2.2 0 0 0 .2.1 58.6 58.6 0 0 0 17.8-9 .2.2 0 0 0 .1-.2c1.5-15.2-2.5-28.3-10.5-40a.2.2 0 0 0-.1 0zM23.7 37c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.2 6.4 7.2 0 4-2.8 7.2-6.4 7.2zm23.6 0c-3.5 0-6.4-3.2-6.4-7.2s2.8-7.2 6.4-7.2c3.6 0 6.5 3.2 6.4 7.2 0 4-2.8 7.2-6.4 7.2z"/></svg>
       Discord
     </a>
+    <button onclick="document.getElementById('chat-modal-overlay').classList.add('active')" style="display:flex;align-items:center;gap:.4rem;background:rgba(0,245,160,.1);border:1px solid rgba(0,245,160,.25);color:var(--neon);font-weight:700;font-size:.78rem;padding:.45rem 1rem;border-radius:8px;cursor:pointer;white-space:nowrap;margin-left:.5rem;transition:all .2s;" onmouseover="this.style.background='rgba(0,245,160,.2)'" onmouseout="this.style.background='rgba(0,245,160,.1)'">💬 Sohbet</button>
+    <button onclick="openConvs()" style="display:flex;align-items:center;gap:.4rem;background:rgba(0,245,160,.1);border:1px solid rgba(0,245,160,.25);color:var(--neon);font-weight:700;font-size:.78rem;padding:.45rem 1rem;border-radius:8px;cursor:pointer;white-space:nowrap;margin-left:.5rem;transition:all .2s;" onmouseover="this.style.background='rgba(0,245,160,.18)'" onmouseout="this.style.background='rgba(0,245,160,.1)'">💬 Sohbet</button>
   </div>
 </nav>
 
@@ -903,7 +1038,7 @@ async function searchPlayer() {
       </div>
     `;
   } catch {
-    result.innerHTML = '<div style="text-align:center;color:var(--red);font-size:.85rem;">Oyuncu bulunamadı.</div>';
+    result.innerHTML = '<div style="text-align:center;color:var(--red);font-size:.85rem;padding:2rem;">Oyuncu bulunamadı.</div>';
   }
 }
 
@@ -959,6 +1094,7 @@ async function openProfile(username) {
           <div style="font-family:'Press Start 2P',monospace;font-size:.9rem;color:var(--orange);">${(kills.value/deaths.value).toFixed(2)}</div>
         </div>
       ` : ''}
+      <button onclick="startChat('${username}');document.getElementById('profile-overlay').classList.remove('active');" style="width:100%;margin-top:1.5rem;background:linear-gradient(135deg,var(--neon2),var(--neon));border:none;border-radius:12px;color:#000;font-family:'Press Start 2P',monospace;font-size:.6rem;padding:.9rem;cursor:pointer;">💬 Mesaj Gönder</button>
     `;
   } catch {
     content.innerHTML = '<div style="text-align:center;color:var(--red);padding:2rem;">Profil yüklenemedi.</div>';
@@ -968,6 +1104,158 @@ async function openProfile(username) {
 function closeProfile(e) {
   if (e.target === document.getElementById('profile-overlay')) {
     document.getElementById('profile-overlay').classList.remove('active');
+  }
+}
+
+// MESAJLAŞMA
+let chatCurrentUser = null;
+let chatMyUsername = null;
+let chatLastMsgId = 0;
+let chatPollInterval = null;
+let notifPollInterval = null;
+
+function startChat(targetUser) {
+  const myName = prompt('Minecraft kullanıcı adın nedir?');
+  if (!myName || myName.trim() === '') return;
+  chatMyUsername = myName.trim();
+  chatCurrentUser = targetUser;
+  
+  document.getElementById('chat-header-name').textContent = targetUser;
+  document.getElementById('chat-av').src = targetUser.toLowerCase() === 'kuzeyhere' 
+    ? 'https://raw.githubusercontent.com/ShadowIsHere0/lahmacunsmp/main/KuzeyHere.png'
+    : `https://mc-heads.net/avatar/${targetUser}/32`;
+  document.getElementById('chat-window').classList.add('open');
+  loadChatHistory();
+  
+  clearInterval(chatPollInterval);
+  chatPollInterval = setInterval(loadChatHistory, 1000);
+}
+
+function closeChatWindow() {
+  document.getElementById('chat-window').classList.remove('open');
+  clearInterval(chatPollInterval);
+  chatCurrentUser = null;
+}
+
+async function loadChatHistory() {
+  if (!chatMyUsername || !chatCurrentUser) return;
+  try {
+    const r = await fetch(`${API}/api/messages/conversation?user1=${chatMyUsername}&user2=${chatCurrentUser}`);
+    const msgs = await r.json();
+    const container = document.getElementById('chat-messages');
+    const wasAtBottom = container.scrollHeight - container.clientHeight <= container.scrollTop + 50;
+    container.innerHTML = msgs.length === 0 
+      ? '<div style="text-align:center;color:var(--muted);font-size:.8rem;padding:1rem;">Henüz mesaj yok. İlk mesajı sen at!</div>'
+      : msgs.map(m => {
+          const isSent = m.sender === chatMyUsername;
+          const time = new Date(m.sent_at).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
+          return `<div style="display:flex;flex-direction:column;align-items:${isSent?'flex-end':'flex-start'};">
+            <div class="chat-msg ${isSent?'sent':'recv'}">${m.content}</div>
+            <div class="chat-msg-time" style="text-align:${isSent?'right':'left'};color:var(--muted);padding:0 .5rem;">${m.sender} · ${time}</div>
+          </div>`;
+        }).join('');
+    if (wasAtBottom) container.scrollTop = container.scrollHeight;
+  } catch {}
+}
+
+let lastSendTime = 0;
+async function sendMessage() {
+  const now = Date.now();
+  if (now - lastSendTime < 2000) {
+    showNotif('⏳ 2 saniye bekle!', '#ff2d55');
+    return;
+  }
+  const input = document.getElementById('chat-input');
+  const content = input.value.trim();
+  if (!content || !chatMyUsername || !chatCurrentUser) return;
+  lastSendTime = now;
+  input.value = '';
+  try {
+    const r = await fetch(API+'/api/messages/send', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ sender: chatMyUsername, receiver: chatCurrentUser, content })
+    });
+    const d = await r.json();
+    if (!d.success) showNotif('❌ ' + d.error, '#ff2d55');
+    else loadChatHistory();
+  } catch { showNotif('❌ Bağlantı hatası', '#ff2d55'); }
+}
+
+function showNotif(text, color) {
+  const notif = document.getElementById('msg-notif');
+  notif.textContent = text;
+  notif.style.color = color || 'var(--neon)';
+  notif.classList.add('show');
+  setTimeout(() => notif.classList.remove('show'), 4000);
+}
+
+// BİLDİRİM POLLİNG
+let notifUsername = null;
+let notifLastId = 0;
+
+function startNotifPolling(username) {
+  notifUsername = username;
+  clearInterval(notifPollInterval);
+  notifPollInterval = setInterval(async () => {
+    if (!notifUsername) return;
+    try {
+      const r = await fetch(`${API}/api/messages/new?username=${notifUsername}&since=${new Date(Date.now()-2000).toISOString()}`);
+      const msgs = await r.json();
+      msgs.forEach(m => {
+        if (m.id > notifLastId) {
+          notifLastId = m.id;
+          if (m.sender !== chatCurrentUser) {
+            showNotif(`💬 ${m.sender} sana mesaj attı!`, 'var(--neon)');
+          }
+        }
+      });
+    } catch {}
+  }, 1000);
+}
+
+// SOHBET MODAL
+async function loadConversations() {
+  const username = document.getElementById('chat-my-username').value.trim();
+  if (!username) return;
+  chatMyUsername = username;
+  notifUsername = username;
+  startNotifPolling(username);
+  document.getElementById('conv-my-name').textContent = username + ' olarak giriş yapıldı';
+  document.getElementById('chat-username-section').style.display = 'none';
+  document.getElementById('chat-conv-list').style.display = 'block';
+
+  try {
+    const r = await fetch(`${API}/api/messages/conversations?username=${username}`);
+    const convs = await r.json();
+    const list = document.getElementById('conversations-list');
+    if (!convs.length) { list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:2rem;font-size:.85rem;">Henüz sohbet yok.</div>'; return; }
+    list.innerHTML = convs.map(c => `
+      <div class="conv-item" onclick="document.getElementById('chat-modal-overlay').classList.remove('active');startChatDirect('${c.other_user}')">
+        <img src="https://mc-heads.net/avatar/${c.other_user}/40" style="width:40px;height:40px;border-radius:8px;image-rendering:pixelated;" onerror="this.src='https://mc-heads.net/avatar/steve/40'">
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:.9rem;">${c.other_user}</div>
+          <div style="font-size:.78rem;color:var(--muted2);margin-top:.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;">${c.last_message||''}</div>
+        </div>
+        ${c.unread > 0 ? `<span class="conv-unread">${c.unread}</span>` : ''}
+      </div>
+    `).join('');
+  } catch { document.getElementById('conversations-list').innerHTML = '<div style="color:var(--red);text-align:center;font-size:.85rem;">Yüklenemedi.</div>'; }
+}
+
+function startChatDirect(targetUser) {
+  if (!chatMyUsername) return;
+  chatCurrentUser = targetUser;
+  document.getElementById('chat-header-name').textContent = targetUser;
+  document.getElementById('chat-av').src = `https://mc-heads.net/avatar/${targetUser}/32`;
+  document.getElementById('chat-window').classList.add('open');
+  loadChatHistory();
+  clearInterval(chatPollInterval);
+  chatPollInterval = setInterval(loadChatHistory, 1000);
+}
+
+function closeChatModal(e) {
+  if (e.target === document.getElementById('chat-modal-overlay')) {
+    document.getElementById('chat-modal-overlay').classList.remove('active');
   }
 }
 
@@ -1096,7 +1384,159 @@ async function submitVote() {
   }
 }
 function adminTab(tab) {
-  ['lb','team','ann','apps'].forEach(t => {
+// MESAJLAŞMA
+let chatMyName = localStorage.getItem('chat_username') || null;
+let chatWithUser = null;
+let chatPollInterval = null;
+let notifPollInterval = null;
+let lastMsgTime = new Date().toISOString();
+let chatLastSent = 0;
+
+function setChatUser() {
+  const name = document.getElementById('chat-myname').value.trim();
+  if (!name) return;
+  chatMyName = name;
+  localStorage.setItem('chat_username', name);
+  document.getElementById('username-overlay').style.display = 'none';
+  startNotifPolling();
+  if (chatWithUser) openChatWindow(chatWithUser);
+}
+
+function startChat(username) {
+  if (username === chatMyName) return;
+  chatWithUser = username;
+  if (!chatMyName) {
+    document.getElementById('username-overlay').style.display = 'flex';
+    return;
+  }
+  openChatWindow(username);
+}
+
+async function openChatWindow(username) {
+  const skinUrl = username.toLowerCase() === 'kuzeyhere'
+    ? 'https://raw.githubusercontent.com/ShadowIsHere0/lahmacunsmp/main/KuzeyHere.png'
+    : `https://mc-heads.net/avatar/${username}/40`;
+  document.getElementById('chat-av').src = skinUrl;
+  document.getElementById('chat-name').textContent = username;
+  document.getElementById('chat-window').classList.add('active');
+  await loadChatMsgs();
+  if (chatPollInterval) clearInterval(chatPollInterval);
+  chatPollInterval = setInterval(loadChatMsgs, 2000);
+  await fetch(API+'/api/messages/read', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ username: chatMyName, other_user: username })
+  });
+}
+
+async function loadChatMsgs() {
+  if (!chatMyName || !chatWithUser) return;
+  try {
+    const r = await fetch(`${API}/api/messages/conversation?user1=${chatMyName}&user2=${chatWithUser}`);
+    const msgs = await r.json();
+    const container = document.getElementById('chat-msgs');
+    const wasAtBottom = container.scrollHeight - container.scrollTop <= container.clientHeight + 50;
+    container.innerHTML = msgs.map(m => {
+      const isSent = m.sender === chatMyName;
+      const time = new Date(m.sent_at).toLocaleTimeString('tr-TR', {hour:'2-digit',minute:'2-digit'});
+      return `<div style="display:flex;flex-direction:column;align-items:${isSent?'flex-end':'flex-start'};">
+        <div class="chat-msg ${isSent?'sent':'recv'}">${m.content}</div>
+        <div class="chat-msg-time" style="text-align:${isSent?'right':'left'}">${time}</div>
+      </div>`;
+    }).join('');
+    if (wasAtBottom) container.scrollTop = container.scrollHeight;
+  } catch {}
+}
+
+async function sendChatMsg() {
+  const input = document.getElementById('chat-input');
+  const content = input.value.trim();
+  if (!content || !chatMyName || !chatWithUser) return;
+  const now = Date.now();
+  if (now - chatLastSent < 2000) {
+    input.placeholder = 'Yavaş yavaş! (2s bekleme)';
+    setTimeout(() => input.placeholder = 'Mesaj yaz...', 2000);
+    return;
+  }
+  chatLastSent = now;
+  input.value = '';
+  try {
+    await fetch(API+'/api/messages/send', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ sender: chatMyName, receiver: chatWithUser, content })
+    });
+    await loadChatMsgs();
+  } catch {}
+}
+
+function closeChat() {
+  document.getElementById('chat-window').classList.remove('active');
+  if (chatPollInterval) clearInterval(chatPollInterval);
+}
+
+function startNotifPolling() {
+  if (!chatMyName) return;
+  if (notifPollInterval) clearInterval(notifPollInterval);
+  notifPollInterval = setInterval(async () => {
+    try {
+      const r = await fetch(`${API}/api/messages/new?username=${chatMyName}&since=${lastMsgTime}`);
+      const msgs = await r.json();
+      if (msgs.length > 0) {
+        lastMsgTime = msgs[msgs.length-1].sent_at;
+        msgs.forEach(m => {
+          if (m.sender !== chatWithUser) showNotif(`💬 ${m.sender} sana mesaj attı!`);
+        });
+        if (chatWithUser && msgs.some(m => m.sender === chatWithUser)) loadChatMsgs();
+      }
+    } catch {}
+  }, 2000);
+}
+
+function showNotif(text) {
+  const toast = document.getElementById('notif-toast');
+  document.getElementById('notif-text').textContent = text;
+  toast.style.display = 'flex';
+  setTimeout(() => toast.style.display = 'none', 4000);
+}
+
+async function openConvs() {
+  if (!chatMyName) {
+    document.getElementById('username-overlay').style.display = 'flex';
+    return;
+  }
+  document.getElementById('convs-overlay').style.display = 'flex';
+  await loadConvs();
+}
+
+async function loadConvs() {
+  try {
+    const r = await fetch(`${API}/api/messages/conversations?username=${chatMyName}`);
+    const convs = await r.json();
+    const list = document.getElementById('convs-list');
+    if (!convs.length) { list.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--muted);font-size:.85rem;">Henüz sohbet yok.</div>'; return; }
+    list.innerHTML = convs.map(c => {
+      const skinUrl = c.other_user.toLowerCase() === 'kuzeyhere'
+        ? 'https://raw.githubusercontent.com/ShadowIsHere0/lahmacunsmp/main/KuzeyHere.png'
+        : `https://mc-heads.net/avatar/${c.other_user}/44`;
+      return `<div class="conv-item" onclick="document.getElementById('convs-overlay').style.display='none';startChat('${c.other_user}');">
+        <img class="conv-av" src="${skinUrl}" onerror="this.src='https://mc-heads.net/avatar/steve/44'">
+        <div style="flex:1;min-width:0;">
+          <div class="conv-name">${c.other_user}</div>
+          <div class="conv-last">${c.last_message || ''}</div>
+        </div>
+        ${c.unread > 0 ? `<span class="conv-unread">${c.unread}</span>` : ''}
+      </div>`;
+    }).join('');
+  } catch {}
+}
+
+function closeConvs(e) {
+  if (e.target === document.getElementById('convs-overlay')) document.getElementById('convs-overlay').style.display = 'none';
+}
+
+if (chatMyName) startNotifPolling();
+
+// ADMIN SEKME
+function adminTab(tab) {
     document.getElementById('admin-tab-'+t).style.display = t===tab ? 'block' : 'none';
     const btn = document.getElementById('tab-'+t);
     if (t===tab) { btn.style.borderColor='var(--orange)'; btn.style.background='rgba(255,107,53,.1)'; btn.style.color='var(--orange)'; }
