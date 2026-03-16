@@ -231,9 +231,49 @@ footer { text-align:center; padding:3rem 2rem; border-top:1px solid var(--border
 #btt { position:fixed; bottom:2rem; right:2rem; background:linear-gradient(135deg,var(--orange),var(--red)); border:none; border-radius:50%; width:50px; height:50px; color:white; font-size:1.3rem; cursor:pointer; opacity:0; pointer-events:none; transition:opacity .3s,transform .2s; z-index:700; box-shadow:0 4px 20px rgba(255,107,53,.4); }
 #btt.show { opacity:1; pointer-events:auto; }
 #btt:hover { transform:scale(1.1); }
+
+/* LOADING */
+#loading-screen { position:fixed; inset:0; background:var(--bg); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:opacity .6s ease, visibility .6s ease; }
+#loading-screen.hide { opacity:0; visibility:hidden; pointer-events:none; }
+.loading-logo { font-family:'Press Start 2P',monospace; font-size:clamp(1rem,3vw,1.8rem); background:linear-gradient(90deg,var(--orange),var(--neon)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:2rem; animation:tglow 1.5s ease-in-out infinite alternate; }
+.loading-bar-wrap { width:220px; height:6px; background:rgba(255,255,255,.08); border-radius:99px; overflow:hidden; }
+.loading-bar { height:100%; width:0; background:linear-gradient(90deg,var(--orange),var(--neon)); border-radius:99px; transition:width .05s; }
+.loading-txt { font-family:'Press Start 2P',monospace; font-size:.45rem; color:var(--muted); margin-top:1rem; }
+
+/* PROFİL MODAL */
+.profile-overlay { position:fixed; inset:0; background:rgba(0,0,0,.85); backdrop-filter:blur(8px); z-index:1500; display:none; align-items:center; justify-content:center; padding:1rem; }
+.profile-overlay.active { display:flex; }
+.profile-modal { background:#0f1520; border:1px solid var(--border2); border-radius:24px; padding:2.5rem; max-width:520px; width:100%; max-height:90vh; overflow-y:auto; position:relative; animation:min .3s cubic-bezier(.34,1.56,.64,1); }
+.profile-modal::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,var(--neon2),transparent); }
+.profile-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem; margin:1.5rem 0; }
+.profile-stat { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:1rem; text-align:center; }
+.profile-stat-val { font-family:'Press Start 2P',monospace; font-size:.75rem; color:var(--orange); margin-bottom:.4rem; }
+.profile-stat-lbl { font-size:.75rem; color:var(--muted2); }
+
+/* OYUNCU ARAMA */
+.search-wrap { max-width:500px; margin:0 auto 3rem; display:flex; gap:.75rem; }
+.search-input { flex:1; background:var(--surface); border:1px solid var(--border); border-radius:12px; color:var(--text); font-family:'Outfit',sans-serif; font-size:.9rem; padding:.85rem 1.2rem; outline:none; transition:border-color .2s; }
+.search-input:focus { border-color:var(--orange); }
+.search-btn { background:linear-gradient(135deg,var(--orange),var(--red)); border:none; border-radius:12px; color:white; font-family:'Outfit',sans-serif; font-weight:700; font-size:.9rem; padding:.85rem 1.5rem; cursor:pointer; transition:all .2s; }
+.search-btn:hover { transform:scale(1.05); }
 </style>
 </head>
 <body>
+
+<!-- LOADING -->
+<div id="loading-screen">
+  <div class="loading-logo">LahmacunSMP</div>
+  <div class="loading-bar-wrap"><div class="loading-bar" id="loading-bar"></div></div>
+  <div class="loading-txt" id="loading-txt">Yükleniyor...</div>
+</div>
+
+<!-- PROFİL MODAL -->
+<div class="profile-overlay" id="profile-overlay" onclick="closeProfile(event)">
+  <div class="profile-modal">
+    <button onclick="document.getElementById('profile-overlay').classList.remove('active')" style="position:absolute;top:1rem;right:1rem;background:var(--surface2);border:1px solid var(--border);color:var(--muted);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:1rem;">✕</button>
+    <div id="profile-content">Yükleniyor...</div>
+  </div>
+</div>
 
 <!-- NAVBAR -->
 <nav class="navbar" id="navbar">
@@ -265,6 +305,7 @@ footer { text-align:center; padding:3rem 2rem; border-top:1px solid var(--border
     <a class="nav-link" href="#kurallar">Kurallar</a>
     <a class="nav-link" href="#magaza">Mağaza</a>
     <a class="nav-link" href="#liderlik">Liderlik</a>
+    <a class="nav-link" href="#oyuncu">Oyuncu Ara</a>
     <a class="nav-link" href="#kadro">Kadro</a>
     <a class="nav-link" href="#duyurular">Duyurular</a>
     <a class="nav-link" href="#galeri">Galeri</a>
@@ -368,6 +409,19 @@ footer { text-align:center; padding:3rem 2rem; border-top:1px solid var(--border
       <p>Başvurun alındı. Kurucu inceledikten sonra seninle iletişime geçecek.</p>
     </div>
   </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- OYUNCU ARAMA -->
+<div class="sw" id="oyuncu">
+  <div class="sec-label">profil ara</div>
+  <div class="sec-title"><span class="acc">Oyuncu</span> Ara</div>
+  <div class="search-wrap">
+    <input class="search-input" id="search-input" placeholder="Minecraft kullanıcı adı gir..." onkeydown="if(event.key==='Enter')searchPlayer()">
+    <button class="search-btn" onclick="searchPlayer()">🔍 Ara</button>
+  </div>
+  <div id="search-result" style="max-width:500px;margin:0 auto;"></div>
 </div>
 
 <div class="divider"></div>
@@ -779,7 +833,21 @@ function toggleFaq(el) {
   if (!open) item.classList.add('open');
 }
 
-// KADRO
+// LOADING EKRANI
+const loadingMsgs = ['Sunucu kontrol ediliyor...','Kadro yükleniyor...','Duyurular alınıyor...','Neredeyse hazır...'];
+let loadPct = 0;
+const loadInterval = setInterval(() => {
+  loadPct += Math.random() * 15 + 5;
+  if (loadPct > 100) loadPct = 100;
+  document.getElementById('loading-bar').style.width = loadPct + '%';
+  document.getElementById('loading-txt').textContent = loadingMsgs[Math.floor(loadPct/25)] || 'Hazırlanıyor...';
+  if (loadPct >= 100) {
+    clearInterval(loadInterval);
+    setTimeout(() => document.getElementById('loading-screen').classList.add('hide'), 300);
+  }
+}, 120);
+
+// OYUNCU ARAMA & PROFİL
 const roleStyles = {
   'KURUCU': 'background:rgba(255,45,85,.12);color:#ff2d55;border:1px solid rgba(255,45,85,.3);',
   'REHBER': 'background:rgba(0,230,118,.12);color:#00e676;border:1px solid rgba(0,230,118,.3);',
@@ -788,6 +856,120 @@ const roleStyles = {
   'RVIP':   'background:rgba(255,182,39,.12);color:#ffb627;border:1px solid rgba(255,182,39,.3);',
   'MEDYA':  'background:rgba(191,90,242,.12);color:#bf5af2;border:1px solid rgba(191,90,242,.3);',
 };
+
+// KADRO
+async function searchPlayer() {
+  const username = document.getElementById('search-input').value.trim();
+  const result = document.getElementById('search-result');
+  if (!username) return;
+  result.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.85rem;">Aranıyor...</div>';
+
+  try {
+    const [teamRes, lbRes, voteRes] = await Promise.all([
+      fetch(API+'/api/team'),
+      fetch(API+'/api/leaderboard'),
+      fetch(API+'/api/vote/leaderboard')
+    ]);
+    const teamData = await teamRes.json();
+    const lbData = await lbRes.json();
+    const voteData = await voteRes.json();
+
+    const player = teamData.find(p => p.username.toLowerCase() === username.toLowerCase());
+    const kills = lbData.kills.find(p => p.username.toLowerCase() === username.toLowerCase());
+    const deaths = lbData.deaths.find(p => p.username.toLowerCase() === username.toLowerCase());
+    const online = lbData.online.find(p => p.username.toLowerCase() === username.toLowerCase());
+    const votes = voteData.find(p => p.minecraft_username.toLowerCase() === username.toLowerCase());
+
+    const roleStyle = player ? (roleStyles[player.role] || 'background:rgba(107,122,153,.12);color:#8892a4;border:1px solid rgba(107,122,153,.25);') : 'background:rgba(107,122,153,.12);color:#8892a4;border:1px solid rgba(107,122,153,.25);';
+    const role = player ? player.role : 'Misafir';
+    const desc = player ? player.description : 'Kadro üyesi değil.';
+    const skinUrl = username.toLowerCase() === 'kuzeyhere' 
+      ? 'https://raw.githubusercontent.com/ShadowIsHere0/lahmacunsmp/main/KuzeyHere.png'
+      : `https://mc-heads.net/avatar/${username}/80`;
+
+    result.innerHTML = `
+      <div class="gc" style="padding:2rem;text-align:center;" onclick="openProfile('${username}')">
+        <img src="${skinUrl}" style="width:80px;height:80px;border-radius:14px;image-rendering:pixelated;border:2px solid var(--border2);margin:0 auto 1rem;display:block;object-fit:cover;object-position:top;" onerror="this.src='https://mc-heads.net/avatar/steve/80'">
+        <div style="font-family:'Press Start 2P',monospace;font-size:.65rem;margin-bottom:.6rem;">${username}</div>
+        <div style="font-size:.78rem;font-weight:700;padding:.3rem .9rem;border-radius:99px;display:inline-block;margin-bottom:1rem;${roleStyle}">${role}</div>
+        <div style="font-size:.85rem;color:var(--muted2);margin-bottom:1.5rem;">${desc}</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.75rem;"><div style="font-family:'Press Start 2P',monospace;font-size:.65rem;color:var(--orange);">${kills?.value??0}</div><div style="font-size:.72rem;color:var(--muted2);margin-top:.3rem;">Kill</div></div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.75rem;"><div style="font-family:'Press Start 2P',monospace;font-size:.65rem;color:var(--red);">${deaths?.value??0}</div><div style="font-size:.72rem;color:var(--muted2);margin-top:.3rem;">Ölüm</div></div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.75rem;"><div style="font-family:'Press Start 2P',monospace;font-size:.65rem;color:var(--neon);">${online?.value??0}s</div><div style="font-size:.72rem;color:var(--muted2);margin-top:.3rem;">Süre</div></div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:.75rem;"><div style="font-family:'Press Start 2P',monospace;font-size:.65rem;color:var(--yellow);">${votes?.total_votes??0}</div><div style="font-size:.72rem;color:var(--muted2);margin-top:.3rem;">Oy</div></div>
+        </div>
+        <div style="margin-top:1rem;font-size:.78rem;color:var(--muted);">Detaylı profil için tıkla →</div>
+      </div>
+    `;
+  } catch {
+    result.innerHTML = '<div style="text-align:center;color:var(--red);font-size:.85rem;">Oyuncu bulunamadı.</div>';
+  }
+}
+
+async function openProfile(username) {
+  document.getElementById('profile-overlay').classList.add('active');
+  const content = document.getElementById('profile-content');
+  content.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);">Yükleniyor...</div>';
+
+  try {
+    const [teamRes, lbRes, voteRes, appRes] = await Promise.all([
+      fetch(API+'/api/team'),
+      fetch(API+'/api/leaderboard'),
+      fetch(API+'/api/vote/leaderboard'),
+      fetch(API+'/api/applications?password='+adminPassword)
+    ]);
+    const teamData = await teamRes.json();
+    const lbData = await lbRes.json();
+    const voteData = await voteRes.json();
+    const appData = await appRes.json();
+
+    const player = teamData.find(p => p.username.toLowerCase() === username.toLowerCase());
+    const kills = lbData.kills.find(p => p.username.toLowerCase() === username.toLowerCase());
+    const deaths = lbData.deaths.find(p => p.username.toLowerCase() === username.toLowerCase());
+    const online = lbData.online.find(p => p.username.toLowerCase() === username.toLowerCase());
+    const votes = voteData.find(p => p.minecraft_username.toLowerCase() === username.toLowerCase());
+    const killRank = lbData.kills.findIndex(p => p.username.toLowerCase() === username.toLowerCase()) + 1;
+    const playerApps = appData.filter(a => a.minecraft_username.toLowerCase() === username.toLowerCase());
+
+    const roleStyle = player ? (roleStyles[player.role] || 'background:rgba(107,122,153,.12);color:#8892a4;border:1px solid rgba(107,122,153,.25);') : 'background:rgba(107,122,153,.12);color:#8892a4;border:1px solid rgba(107,122,153,.25);';
+    const role = player ? player.role : 'Misafir';
+    const skinUrl = username.toLowerCase() === 'kuzeyhere'
+      ? 'https://raw.githubusercontent.com/ShadowIsHere0/lahmacunsmp/main/KuzeyHere.png'
+      : `https://mc-heads.net/avatar/${username}/80`;
+
+    content.innerHTML = `
+      <div style="text-align:center;">
+        <img src="${skinUrl}" style="width:100px;height:100px;border-radius:16px;image-rendering:pixelated;border:3px solid var(--border2);margin:0 auto 1.5rem;display:block;object-fit:cover;object-position:top;" onerror="this.src='https://mc-heads.net/avatar/steve/80'">
+        <div style="font-family:'Press Start 2P',monospace;font-size:.8rem;margin-bottom:.6rem;">${username}</div>
+        <div style="font-size:.8rem;font-weight:700;padding:.3rem .9rem;border-radius:99px;display:inline-block;margin-bottom:.5rem;${roleStyle}">${role}</div>
+        ${player ? `<div style="font-size:.85rem;color:var(--muted2);margin:1rem 0;">${player.description}</div>` : ''}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;margin:1.5rem 0;">
+        <div class="profile-stat"><div class="profile-stat-val">${kills?.value??0}</div><div class="profile-stat-lbl">⚔️ Kill</div></div>
+        <div class="profile-stat"><div class="profile-stat-val" style="color:var(--red);">${deaths?.value??0}</div><div class="profile-stat-lbl">💀 Ölüm</div></div>
+        <div class="profile-stat"><div class="profile-stat-val" style="color:var(--neon);">${online?.value??0}s</div><div class="profile-stat-lbl">⏱ Online</div></div>
+        <div class="profile-stat"><div class="profile-stat-val" style="color:var(--yellow);">${votes?.total_votes??0}</div><div class="profile-stat-lbl">🗳️ Oy</div></div>
+        <div class="profile-stat"><div class="profile-stat-val" style="color:var(--gold);">${killRank > 0 ? '#'+killRank : '—'}</div><div class="profile-stat-lbl">🏆 Sıralama</div></div>
+        <div class="profile-stat"><div class="profile-stat-val" style="color:var(--purple);">${playerApps.length}</div><div class="profile-stat-lbl">📋 Başvuru</div></div>
+      </div>
+      ${kills?.value > 0 && deaths?.value > 0 ? `
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem;text-align:center;">
+          <div style="font-size:.8rem;color:var(--muted2);margin-bottom:.4rem;">K/D Oranı</div>
+          <div style="font-family:'Press Start 2P',monospace;font-size:.9rem;color:var(--orange);">${(kills.value/deaths.value).toFixed(2)}</div>
+        </div>
+      ` : ''}
+    `;
+  } catch {
+    content.innerHTML = '<div style="text-align:center;color:var(--red);padding:2rem;">Profil yüklenemedi.</div>';
+  }
+}
+
+function closeProfile(e) {
+  if (e.target === document.getElementById('profile-overlay')) {
+    document.getElementById('profile-overlay').classList.remove('active');
+  }
+}
 
 async function loadTeam() {
   const customSkins = {
