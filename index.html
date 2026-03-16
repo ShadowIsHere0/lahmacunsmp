@@ -490,7 +490,7 @@ footer { text-align:center; padding:3rem 2rem; border-top:1px solid var(--border
   <div class="sec-label">gerçek zamanlı</div>
   <div class="sec-title"><span class="acc">Sunucu</span> Durumu</div>
   <div class="stat-grid">
-    <div class="stat-card"><div class="stat-icon">🟢</div><div class="stat-lbl">Durum</div><div class="stat-val" id="status-text"><span class="pdot" id="status-dot"></span>Yükleniyor</div></div>
+    <div class="stat-card"><div class="stat-icon">🟢</div><div class="stat-lbl">Durum</div><div class="stat-val off" id="status-text"><span class="pdot off" id="status-dot"></span>Cevrimdisi</div></div>
     <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-lbl">Aktif Oyuncular</div><div class="stat-val" id="player-count">—</div></div>
     <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-lbl">Maksimum</div><div class="stat-val" id="max-players">—</div></div>
     <div class="stat-card"><div class="stat-icon">🎮</div><div class="stat-lbl">Versiyon</div><div class="stat-val" id="server-version" style="font-size:.6rem">—</div></div>
@@ -939,7 +939,7 @@ async function checkStatus() {
     document.getElementById('server-version').textContent = '1.21.11';
   }
 }
-checkStatus(); setInterval(checkStatus, 60000);
+checkStatus(); setInterval(checkStatus, 30000);
 
 // ROLE STYLES
 const roleStyles = {
