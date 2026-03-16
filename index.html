@@ -1384,6 +1384,16 @@ async function submitVote() {
   }
 }
 function adminTab(tab) {
+  ['lb','team','ann','apps'].forEach(t => {
+    document.getElementById('admin-tab-'+t).style.display = t===tab ? 'block' : 'none';
+    const btn = document.getElementById('tab-'+t);
+    if (t===tab) { btn.style.borderColor='var(--orange)'; btn.style.background='rgba(255,107,53,.1)'; btn.style.color='var(--orange)'; }
+    else { btn.style.borderColor='var(--border)'; btn.style.background='transparent'; btn.style.color='var(--muted)'; }
+  });
+  if (tab==='team') loadAdminTeam();
+  if (tab==='ann') loadAdminAnn();
+  if (tab==='apps') loadAdminApps();
+}
 // MESAJLAŞMA
 let chatMyName = localStorage.getItem('chat_username') || null;
 let chatWithUser = null;
