@@ -258,7 +258,16 @@ app.post('/api/vote', (req, res) => {
   }
 
   db.prepare('INSERT INTO votes (minecraft_username, ip) VALUES (?, ?)').run(minecraft_username, ip);
-  
+  // 260. satırdan sonra burayı ekle kanka
+const discordWebhookURL = "https://discord.com/api/webhooks/1484134650581487667/hCFpPH2auq8JECRFBu4cXNV8d16tw4nfPNn1kGDYPQD14fjjVoDdmo3Cn201rISpXFxE";
+
+fetch(discordWebhookURL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+        content: `📢 **[YENİ OY]** \nOyuncu: **${minecraft_username}** \nKomut: \`/crates openfor ${minecraft_username} lahmacun_kasasi\``
+    })
+}).catch(err => console.log("Discord'a mesaj gönderilemedi kanka:", err));
   // Liderlik tablosuna oyuncu yoksa ekle
   db.prepare(`INSERT OR IGNORE INTO leaderboard (username) VALUES (?)`).run(minecraft_username);
 
