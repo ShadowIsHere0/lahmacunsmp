@@ -312,3 +312,27 @@ app.get('/api/vote/leaderboard', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Sunucu ${PORT} portunda calisiyor`));
+async function oyVer() {
+    const oyuncuAdi = document.getElementById("minecraft-kullanici-adin").value; // HTML'deki kutunun ID'si bu olmalı
+    const webhookURL = "BURAYA_DISCORDDAN_ALDIĞIN_URLYİ_YAPIŞTIR";
+
+    if (!oyuncuAdi) {
+        alert("Kanka ismini yazmadın, lahmacunlar boşa gitmesin!");
+        return;
+    }
+
+    const mesaj = {
+        content: `📢 **[YENİ OY]** \nKullanıcı: **${oyuncuAdi}** \nKomut: \`/crates openfor ${oyuncuAdi} lahmacun_kasasi\``
+    };
+
+    try {
+        await fetch(webhookURL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(mesaj)
+        });
+        alert("Oy verildi kanka! Sunucuya girince ödülün hazır.");
+    } catch (error) {
+        alert("Kanka bir hata oldu, Discord'a haber gitmedi!");
+    }
+}
